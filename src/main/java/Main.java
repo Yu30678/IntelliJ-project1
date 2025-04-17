@@ -2,6 +2,7 @@ import com.sun.net.httpserver.HttpServer;
 import controller.memberController;
 import controller.productController;
 import controller.cartController;
+import controller.orderController;
 import java.net.InetSocketAddress;
 import java.io.IOException;
 
@@ -11,8 +12,8 @@ public class Main {
         server.createContext("/member" , new memberController());
         server.createContext("/product", new productController());
         server.createContext("/cart", new cartController());
-        //server.createContext("/member/register", new memberRegisterHandler());
-        //server.createContext("/member/login", new memberLoginHandler());
+        server.createContext("/order", new orderController());
+        server.createContext("/order_detail", new orderController());
 
         server.setExecutor(null);
         server.start();

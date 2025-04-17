@@ -53,7 +53,7 @@ public class cartController implements HttpHandler {
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(responseBytes);
         }catch (Exception e) {
-            e.printStackTrace();  // <-- 加這個
+            e.printStackTrace();
 
         }
     }

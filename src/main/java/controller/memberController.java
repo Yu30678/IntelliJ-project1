@@ -1,12 +1,10 @@
 package controller;
-
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import dao.memberDAO;
 import model.Member;
 import util.GsonUtil;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -35,7 +33,7 @@ public class memberController implements HttpHandler {
             Member newMember = gson.fromJson(reader, Member.class);
 
             // 加入註冊時間
-            newMember.setCreate_at(LocalDateTime.now());
+            //newMember.setCreate_at(LocalDateTime.now());
 
             System.out.println("收到註冊資料:");
             System.out.println("  姓名: " + newMember.getName());
