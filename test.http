@@ -1,0 +1,14 @@
+### 註冊會員
+POST http://localhost:8080/member
+Content-Type: application/json
+
+{
+  "name": "測試小老",
+  "password": "99758309",
+  "phone": "09345498347",
+  "address": "台北市萬華區",
+  "email": "chamg90876@example.com"
+}
+
+###顯示所有商品列表
+GET http://localhost:8080/product
