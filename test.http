@@ -1,14 +1,10 @@
-### 註冊會員
-POST http://localhost:8080/member
+###測試新增商品
+POST http://localhost:8080/product/add
 Content-Type: application/json
-
 {
-  "name": "測試小老",
-  "password": "99758309",
-  "phone": "09345498347",
-  "address": "台北市萬華區",
-  "email": "chamg90876@example.com"
+"name": "耳機",
+  "price": 1999.99,
+  "soh": 20,
+  "category_id": 2
 }
 
-###顯示所有商品列表
-GET http://localhost:8080/product
