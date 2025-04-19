@@ -16,12 +16,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class orderController implements HttpHandler {
+    public orderController() {
+        System.out.println("✅ orderController created and registered");
+    }
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
             .create();
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
+        System.out.println("📦 收到請求: " + exchange.getRequestMethod() + " " + exchange.getRequestURI().getPath());
         String method = exchange.getRequestMethod();
         String path = exchange.getRequestURI().getPath();
         try {
@@ -51,6 +55,7 @@ public class orderController implements HttpHandler {
 
         int orderId = orderDAO.placeOrderFromCart(memberId);
         sendResponse(exchange, 201, gson.toJson("Order created: " + orderId));
+        System.out.println("📥 收到訂單建立請求");
     }
 
     private void handleList(HttpExchange exchange) throws Exception {
