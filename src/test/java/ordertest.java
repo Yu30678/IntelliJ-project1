@@ -20,7 +20,7 @@ public static void main(String[] args) throws IOException, InterruptedException 
 
     // 1. 建立訂單
     System.out.println("\n➤ 測試下訂單 (POST /order)");
-    String orderResponse = sendPost(BASE_URL + "/order", String.valueOf(memberId));
+    String orderResponse = sendPost(BASE_URL , String.valueOf(memberId));
     System.out.println("回應: " + orderResponse);
 
     // 需稍微等待，以保證資料庫完成寫入
