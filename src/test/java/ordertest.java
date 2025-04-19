@@ -16,8 +16,8 @@ public class ordertest {
             .create();
 
 public static void main(String[] args) throws IOException, InterruptedException {
-    int memberId = 30678;  // 請替換為測試用會員 ID
-
+    int memberId = 30679;  // 請替換為測試用會員 ID
+    int orderId = 25;
     // 1. 建立訂單
     System.out.println("\n➤ 測試下訂單 (POST /order)");
     String orderResponse = sendPost(BASE_URL , String.valueOf(memberId));
@@ -28,7 +28,7 @@ public static void main(String[] args) throws IOException, InterruptedException 
 
     // 2. 查詢該會員所有訂單
     System.out.println("\n➤ 測試查詢訂單 (GET /order?member_id=)");
-    String listResponse = sendGet(BASE_URL + "/order?member_id=" + memberId);
+    String listResponse = sendGet(BASE_URL + "?member_id=" + memberId);
     System.out.println("Raw JSON: " + listResponse);
     order[] orders = gson.fromJson(listResponse, order[].class);
     for (order o : orders) {
@@ -36,18 +36,26 @@ public static void main(String[] args) throws IOException, InterruptedException 
                 o.getOrder_id(), o.getMember_id(), o.getCreate_at());
     }
 
-    if (orders.length > 0) {
-        int orderId = orders[0].getOrder_id();
+
 
         // 3. 查詢訂單明細
         System.out.println("\n➤ 測試查詢訂單明細 (GET /order_detail?order_id=)");
-        String detailResponse = sendGet(BASE_URL + "/order_detail?order_id=" + orderId);
+        String detailResponse = sendGet("http://localhost:8080/order_detail?order_id=" + orderId);
         System.out.println("Raw JSON: " + detailResponse);
         order_detail[] details = gson.fromJson(detailResponse, order_detail[].class);
         for (order_detail od : details) {
             System.out.printf("Product ID: %d, Quantity: %d, Price: %s%n",
                     od.getProduct_id(), od.getQuantity(), od.getPrice());
         }
+
+        //4.查詢所有訂單
+        System.out.println("\n>測試查詢所有訂單");
+        String allorders = sendGet(BASE_URL + "/orders");
+        System.out.println("Raw JSON: " + allorders);
+        order[] allorder = gson.fromJson(listResponse, order[].class);
+        for (order p : allorder) {
+        System.out.printf("Order ID: %d, Member ID: %d, Created: %s%n",
+                p.getOrder_id(), p.getMember_id(), p.getCreate_at());
     }
 }
 
