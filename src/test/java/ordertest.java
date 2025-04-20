@@ -48,15 +48,7 @@ public static void main(String[] args) throws IOException, InterruptedException 
                     od.getProduct_id(), od.getQuantity(), od.getPrice());
         }
 
-        //4.查詢所有訂單
-        System.out.println("\n>測試查詢所有訂單");
-        String allorders = sendGet(BASE_URL + "/orders");
-        System.out.println("Raw JSON: " + allorders);
-        order[] allorder = gson.fromJson(listResponse, order[].class);
-        for (order p : allorder) {
-        System.out.printf("Order ID: %d, Member ID: %d, Created: %s%n",
-                p.getOrder_id(), p.getMember_id(), p.getCreate_at());
-    }
+
 }
 
 private static String sendPost(String urlStr, String body) throws IOException {

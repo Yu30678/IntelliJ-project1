@@ -131,4 +131,18 @@ public class orderDAO {
         }
         return true;
     }
+    public static List<order> getAllOrders() throws Exception {
+        String sql = "SELECT order_id, member_id, create_at FROM `order` ORDER BY create_at DESC";
+        List<order> list = new ArrayList<>();
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                order o = new order();
+                o.setOrder_id(rs.getInt("order_id"));
+                o.setMember_id(rs.getInt("member_id"));
+                o.setCreate_at(rs.getTimestamp("create_at").toLocalDateTime());
+                list.add(o);
+            }
+        }
+        return list;
+    }
 }

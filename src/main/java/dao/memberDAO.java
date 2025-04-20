@@ -84,4 +84,42 @@ public class memberDAO {
         }
         return null;
     }
+    public Member getMemberById(int id) throws Exception {
+        String sql = "SELECT member_id, name, phone, address, create_at, email FROM member WHERE member_id = ?";
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Member m = new Member();
+                    m.setMember_id(rs.getInt("member_id"));
+                    m.setName(rs.getString("name"));
+                    m.setPhone(rs.getString("phone"));
+                    m.setAddress(rs.getString("address"));
+                    m.setCreate_at(rs.getTimestamp("create_at").toLocalDateTime());
+                    m.setEmail(rs.getString("email"));
+                    return m;
+                }
+            }
+        }
+        return null;
+    }
+    public boolean updateMember(Member m) throws Exception {
+        String sql = "UPDATE member SET name=?, password=?, phone=?, address=?, email=? WHERE member_id=?";
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, m.getName());
+            ps.setString(2, m.getPassword());
+            ps.setString(3, m.getPhone());
+            ps.setString(4, m.getAddress());
+            ps.setString(5, m.getEmail());
+            ps.setInt(6, m.getMember_id());
+            return ps.executeUpdate() > 0;
+        }
+    }
+    public boolean deleteMember(int id) throws Exception {
+        String sql = "DELETE FROM member WHERE member_id = ?";
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        }
+    }
 }
