@@ -1,55 +1,57 @@
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import model.Member;
-import util.LocalDateTimeAdapter;
-
+import model.Category;
+import model.product;
 import java.io.*;
+import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Optional;
 
-public class memberadmintest {
-    private static final String BASE_URL = "http://localhost:8080/user/members";
-    private static final Gson gson = new GsonBuilder()
-            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
-            .create();
+public class productadmintest {
+    private static final String BASE_CAT_URL = "http://localhost:8080/user/categories";
+    private static final String BASE_PROD_URL = "http://localhost:8080/user/products";
+    private static final Gson gson = new GsonBuilder().create();
 
     public static void main(String[] args) throws Exception {
-        // 1. 新增會員（帶有獨特名稱以便識別）
-        String uniqueSuffix = String.valueOf(System.currentTimeMillis() % 100000);
-        String baseName = "Test56";
-        Member m = new Member();
-        m.setName(baseName + uniqueSuffix);
-        m.setPassword("pa57");
-        m.setPhone("0157" + uniqueSuffix);
-        m.setAddress("Test Ad9ess");
-        m.setCreate_at(LocalDateTime.now());
-        m.setEmail("te66sqr" + uniqueSuffix + "@example.com");
-        System.out.println("CREATE member: " + sendPost(BASE_URL, gson.toJson(m)));
+        // 1. 建立一個新的分類，取得 category_id
+        // 1. 建立一個唯一分類
+        String uniqueCat = "TestCat_" + (System.currentTimeMillis() % 100000);
+        String newCatJson = "{\"name\":\"" + uniqueCat + "\"}";
+        System.out.println("CREATE category: " + sendPost(BASE_CAT_URL, newCatJson));
 
-        // 2. 查詢所有會員，並找出剛剛新增的那筆
-        String listResp = sendGet(BASE_URL);
-        System.out.println("LIST members: " + listResp);
-        Member[] members = gson.fromJson(listResp, Member[].class);
-        Optional<Member> opt = Arrays.stream(members)
-                .filter(u -> (baseName + uniqueSuffix).equals(u.getName()))
-                .findFirst();
-        if (opt.isEmpty()) {
-            System.err.println("❌ 剛剛新增的會員沒找到，無法繼續測試");
-            return;
-        }
-        Member created = opt.get();
+        String catsList = sendGet(BASE_CAT_URL);
+        System.out.println("LIST categories: " + catsList);
+        Category[] cats = gson.fromJson(catsList, Category[].class);
+        Category cat = cats[cats.length - 1];
+        int catId = cat.getCategory_id();
 
-        // 3. 更新該會員
-        created.setName(created.getName() + "_upd");
-        System.out.println("UPDATE member: " + sendPut(BASE_URL, gson.toJson(created)));
+        // 2. 使用該 category_id 建立商品
+        product p = new product();
+        p.setName("30678_" + System.currentTimeMillis() % 1000);
+        p.setPrice(new BigDecimal("99.99"));
+        p.setSoh(100);
+        p.setCategory_id(catId);
+        p.setIs_active(true);
+        System.out.println("CREATE product: " + sendPost(BASE_PROD_URL, gson.toJson(p)));
 
-        // 4. 刪除該會員（此會員沒有任何關聯資料）
-        String delJson = "{\"member_id\":" + created.getMember_id() + "}";
-        System.out.println("DELETE member: " + sendDelete(BASE_URL, delJson));
+        // 3. 列出所有商品，並取最後一筆
+        String prodsList = sendGet(BASE_PROD_URL);
+        System.out.println("LIST products: " + prodsList);
+        product[] prods = gson.fromJson(prodsList, product[].class);
+        product last = prods[prods.length - 1];
+        int prodId = last.getProduct_id();
+
+        // 4. 更新該商品
+        last.setName(last.getName() + "_upd");
+        last.setPrice(new BigDecimal("199.99"));
+        System.out.println("UPDATE product: " + sendPut(BASE_PROD_URL, gson.toJson(last)));
+
+        // 5. 刪除該商品
+        String delJson = "{\"product_id\":" + prodId + "}";
+        System.out.println("DELETE product: " + sendDelete(BASE_PROD_URL, delJson));
     }
 
     private static String sendGet(String urlStr) throws IOException {
@@ -89,9 +91,7 @@ public class memberadmintest {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
             StringBuilder sb = new StringBuilder();
             String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
+            while ((line = reader.readLine()) != null) sb.append(line);
             return sb.toString();
         }
     }

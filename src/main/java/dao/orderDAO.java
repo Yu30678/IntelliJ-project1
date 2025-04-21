@@ -145,4 +145,38 @@ public class orderDAO {
         }
         return list;
     }
+    public static int createOrder(int memberId) throws Exception {
+        String sql = "INSERT INTO `order` (member_id, create_at) VALUES (?, ?)";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, memberId);
+            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                } else {
+                    throw new SQLException("Creating order failed, no ID obtained.");
+                }
+            }
+        }
+    }
+    public static void updateOrder(order o) throws Exception {
+        String sql = "UPDATE `order` SET member_id = ?, create_at = ? WHERE order_id = ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, o.getMember_id());
+            ps.setTimestamp(2, Timestamp.valueOf(o.getCreate_at()));
+            ps.setInt(3, o.getOrder_id());
+            ps.executeUpdate();
+        }
+    }
+    public static void deleteOrder(int orderId) throws Exception {
+        String sql = "DELETE FROM `order` WHERE order_id = ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            ps.executeUpdate();
+        }
+    }
 }

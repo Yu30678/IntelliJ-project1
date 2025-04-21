@@ -56,8 +56,8 @@ public class productDAO {
             ps.setBigDecimal(2, p.getPrice());
             ps.setInt(3, p.getSoh());
             ps.setInt(4, p.getCategory_id());
-            ps.setInt(5, p.getProduct_id());
-            ps.setBoolean(6, p.isIs_active());
+            ps.setBoolean(5, p.isIs_active());
+            ps.setInt(6, p.getProduct_id());
             //ps.setInt(7, p.getProduct_id());
             ps.executeUpdate();
         }
