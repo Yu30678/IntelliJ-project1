@@ -63,7 +63,7 @@ public class cartDAO {
     }
 
     // 查看購物車
-    public List<cart> getCartByMemberId(int memberId) {
+    public static List<cart> getCartByMemberId(int memberId) {
         List<cart> list = new ArrayList<>();
         String sql = "SELECT * FROM cart WHERE member_id = ?";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {

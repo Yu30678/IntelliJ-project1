@@ -77,4 +77,32 @@ public class productDAO {
             ps.executeUpdate();
         }
     }
+    public static product getProductById(int product_id) throws Exception {
+        String sql = "SELECT * FROM product WHERE product_id = ?";
+        try (Connection c = DBUtil.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, product_id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) throw new RuntimeException("找不到商品");
+                product p = new product();
+                p.setProduct_id(rs.getInt("product_id"));
+                p.setName(rs.getString("name"));
+                p.setPrice(rs.getBigDecimal("price"));
+                p.setSoh(rs.getInt("soh"));
+                p.setCategory_id(rs.getInt("category_id"));
+                p.setIs_active(rs.getBoolean("is_active"));
+                return p;
+            }
+        }
+    }
+
+    public static void updateSoh(int product_id, int newSoh) throws Exception {
+        String sql = "UPDATE product SET soh = ? WHERE product_id = ?";
+        try (Connection c = DBUtil.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, newSoh);
+            ps.setInt(2, product_id);
+            ps.executeUpdate();
+        }
+    }
 }

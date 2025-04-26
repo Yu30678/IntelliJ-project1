@@ -7,7 +7,13 @@ import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import dao.orderDAO;
+import dao.cartDAO;
+import dao.productDAO;
 import model.order;
+import model.cart;
+import model.product;
+import model.order_detail;
+
 import util.LocalDateTimeAdapter;
 
 import java.io.InputStreamReader;
@@ -30,6 +36,7 @@ public class orderController implements HttpHandler {
         System.out.println("📦 收到請求: " + exchange.getRequestMethod() + " " + exchange.getRequestURI().getPath());
         String method = exchange.getRequestMethod();
         String path = exchange.getRequestURI().getPath();
+        String query  = exchange.getRequestURI().getRawQuery();
         if (!"/order".equals(path)) {
             exchange.sendResponseHeaders(404, -1);
             return;
@@ -59,6 +66,31 @@ public class orderController implements HttpHandler {
                 return;
             }
             int memberId = json.get("member_id").getAsInt();
+            // --- 新增：先把這個會員的購物車內容撈出來 ---
+            List<cart> carts = cartDAO.getCartByMemberId(memberId);
+            if (carts.isEmpty()) {
+                sendJson(ex, 400, "{\"error\":\"購物車為空\"}");
+                return;
+            }
+            for (cart c : carts) {
+                // 取得完整商品資料
+                product p = productDAO.getProductById(c.getProduct_id());
+
+                // 檢查是否下架
+                if (!p.isIs_active()) {
+                    String err = String.format("{\"error\":\"商品 %d 已下架\"}", p.getProduct_id());
+                    sendJson(ex, 400, err);
+                    return;
+                }
+                // 檢查庫存是否足夠
+                if (c.getQuantity() > p.getSoh()) {
+                    String err = String.format("{\"error\":\"商品 %d 庫存不足\"}", p.getProduct_id());
+                    sendJson(ex, 400, err);
+                    return;
+                }
+            }
+
+            // --- 全部檢查通過，才真正去建立訂單 ---
             int newId = orderDAO.createOrder(memberId);
             sendJson(ex, 201, "{\"order_id\":" + newId + "}");
         } catch (JsonSyntaxException e) {
@@ -75,11 +107,22 @@ public class orderController implements HttpHandler {
             List<order> list = (q != null && q.startsWith("member_id="))
                     ? orderDAO.getOrdersByMemberId(Integer.parseInt(q.split("=")[1]))
                     : orderDAO.getAllOrders();
+
             sendJson(ex, 200, gson.toJson(list));
         } catch (Exception e) {
             e.printStackTrace();
             sendJson(ex, 500, "{\"error\":\"load failed\"}");
         }
+        try {
+            int orderId = 0;
+            List<order_detail> details = orderDAO.getOrderDetailsByOrderId(orderId);
+            String json = gson.toJson(details);
+            sendJson(ex, 200, json);
+        } catch (Exception e) {
+            e.printStackTrace();
+            sendJson(ex, 500, "{\"error\":\"load failed\"}");
+        }
+        return;
     }
 
     private void handleUpdate(HttpExchange ex) throws IOException {

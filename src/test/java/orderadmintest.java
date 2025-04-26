@@ -12,13 +12,14 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 public class orderadmintest {
     private static final String BASE_URL = "http://localhost:8080/order";
+    private static final String Dt = "http://localhost:8080/order_detail";
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
             .create();
 
     public static void main(String[] args) throws Exception {
         int memberId = 30678;
-
+        //int orderId = 1;
         // 1. 新增訂單
         System.out.println("➤ CREATE order");
         String createJson = "{\"member_id\":" + memberId + "}";
@@ -38,7 +39,15 @@ public class orderadmintest {
         String allResp = sendGet(BASE_URL);
         System.out.println("Response: " + allResp);
         order[] allOrders = gson.fromJson(allResp, order[].class);
+        /*
+        //allorderdetail
+        System.out.println("➤ QUERY all orderdetail");
+        String alldetailResp = sendGet(Dt + "orderId=" + orderId);
+        System.out.println("Response: " + alldetailResp);
+        order[] allOrderdetail = gson.fromJson(alldetailResp, order[].class);
 
+
+         */
         // 4. 更新訂單（更新 create_at）
         System.out.println("➤ UPDATE order");
         order toUpdate = null;
