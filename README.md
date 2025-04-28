@@ -90,3 +90,11 @@ Backend_side_project/
      d.從該會員購物車移除該商品
  6.訂單查詢
    ．GET/order/{member_id}
+ 7.管理員功能
+   ．GET/member >瀏覽會員資訊(可by id)
+   ．PUT/member >更新會員資訊
+   ．POST/member >新增會員
+   ．DELET/member >刪除會員
+   ．GET/category >瀏覽商品類別
+   ．PUT/category >更新商品類別
+   ．POST/category >新增商品類別
