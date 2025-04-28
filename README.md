@@ -98,3 +98,8 @@ Backend_side_project/
    ．GET/category >瀏覽商品類別
    ．PUT/category >更新商品類別
    ．POST/category >新增商品類別
+   ．DELET/category >移除商品類別
+   ．GET/product >瀏覽商品
+   ．PUT/product >更新商品
+   ．POST/product >新增商品
+   ．DELET/product >移除商品
