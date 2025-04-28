@@ -77,10 +77,16 @@ Backend_side_project/
    ．GET/product >瀏覽商品列表
  3.加入購物車
    ．POST/cart >
-     1.檢查商品是否已存在、is_active、庫存
-     2.若已存在購物車提示更新商品
+     a.檢查商品是否已存在、is_active、庫存
+     b.若已存在購物車提示更新商品
  4.查看/移除購物車
    ．GET/cart?member_id={id} >取得清單
    ．DELET/cart member_id = ? AND product_id = ? >移除購物車商品
  5.建立訂單
-   ．
+   ．POST/order
+     a.從cart撈取商品
+     b.檢查商品狀態＆庫存
+     c.建立order&order_drtail
+     d.從該會員購物車移除該商品
+ 6.訂單查詢
+   ．GET/order/{member_id}
