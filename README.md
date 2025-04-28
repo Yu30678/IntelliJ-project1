@@ -103,3 +103,5 @@ Backend_side_project/
    ．PUT/product >更新商品
    ．POST/product >新增商品
    ．DELET/product >移除商品
+   ．GET/order >瀏覽訂單資訊
+   
