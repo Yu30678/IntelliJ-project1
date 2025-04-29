@@ -1,32 +1,26 @@
-##專案概要
-- 提供完整的購物車網站後端
-  - 會員：註冊、登入
-  - 商品：瀏覽商品列表
-  - 購物車：加入、查詢、更新、刪除
-  - 訂單：建立、查詢
-  - 管理員：會員、商品、商品類別、訂單的新增修改刪除查詢
-- JAVA 21、原生httpserver
-- 資料庫：MySQL 9.2.0，使用JDBC驅動
+##  專案概要
 
 
-＃＃技術棧
+- 會員管理：註冊、登入
+- 商品管理：瀏覽商品列表
+- 購物車功能：加入、查詢、更新、刪除
+- 訂單管理：建立、查詢
+- 後台管理：會員、商品、商品類別、訂單的CRUD操作
 
-| 語言      | Java 21                  |
+## 技術棧
 
-| HTTP     | JAVA 原生httpserver       |
+- 程式語言Java 21
+- HTTP 服務Java 原生 httpserver
+- JSON 處理Gson
+- 資料庫MySQL 9.2.0、JDBC Driver
+- 專案管理Maven
 
-| JSON     | Gson                     |
+## 專案架構
 
-| 資料庫    | MySQL 9.2.0、JDBC Driver  |
-
-| 構建管理   | Maven                    |
-
-##專案架構
-Backend_side_project/
 Backend_side_project/
 ├── pom.xml
 ├── src/main/java/
-│   │   └── Main.java           # 啟動 HttpServer
+│   ├── Main.java           # 啟動 HttpServer
 │   ├── controller/
 │   │   ├── memberController.java
 │   │   ├── productController.java
@@ -40,68 +34,107 @@ Backend_side_project/
 │   │   ├── cartDAO.java
 │   │   └── orderDAO.java
 │   ├── model/
-│   │   ├── cart.java
+│   │   ├── Cart.java
 │   │   ├── Member.java
-│   │   ├── product.java
+│   │   ├── Product.java
 │   │   ├── Category.java
-│   │   ├── user.java
-│   │   ├── order.java
-│   │   └── Order_detail.java
-│   └── server/
-│   │   ├──WebServer.java
-    └── util/
+│   │   ├── User.java
+│   │   ├── Order.java
+│   │   └── OrderDetail.java
+│   ├── server/
+│   │   └── WebServer.java
+│   └── util/
 │       ├── DBUtil.java               # 連線池與連線關閉工具
 │       ├── LocalDateTimeAdapter.java # 處理時間序列化與反序列化操作
-│       └── GsonUtil.java             # Gson 共用
+│       └── GsonUtil.java             # Gson 共用工具
 
-##環境變數與啟動
-1.建立資料庫：已完成
-2.編譯&啟動
-  -打包
-      mvn clean package
-  -執行jar
-      java -jar target/Backend_side_project.jar
-  -開發模式
-      mvn compile ##編譯原始碼
-      mvn exec:java\
-        -Dexec.mainClass="main.Main" ##(這邊我不太確定是不是這樣寫)
+## 環境設置與啟動
+
+1. 資料庫建立：已完成
+2. 編譯與啟動
+- 打包
+  bashmvn clean package
+
+- 執行 JAR 檔
+  java -jar target/Backend_side_project.jar
+
+- 開發模式
+  bash# 編譯原始碼
+  mvn compile
+
+# 執行主類
+mvn exec:java -Dexec.mainClass="main.Main"
+
+
+
+
+資料庫設計
+ER Diagram：詳見 Notion 文件
+核心流程
+1. 會員註冊/登入
+
+- POST /member - 建立會員
+- POST /member/login - 會員登入
+
+2. 商品瀏覽
+
+- GET /product - 瀏覽商品列表
+
+3. 加入購物車
+
+- POST /cart
+
+  檢查商品是否已存在、is_active 狀態、庫存數量
+  若商品已存在購物車，提示更新商品
+
+
+
+4. 查看/移除購物車
+
+- GET /cart?member_id={id} - 取得購物車清單
+- DELETE /cart (參數：member_id、product_id) - 移除購物車商品
+
+5. 建立訂單
+
+- POST /order
+
+  從購物車撈取商品
+  檢查商品狀態與庫存
+  建立 order 與 order_detail
+  從該會員購物車移除該商品
  
- ##資料庫設計
- ER Diagram：詳Notion
 
- ##核心流程
- 1.會員註冊/登入
-   ．POST/member > 建立會員
-   ．POST/member/login > 會員登入
- 2.商品瀏覽
-   ．GET/product >瀏覽商品列表
- 3.加入購物車
-   ．POST/cart >
-     a.檢查商品是否已存在、is_active、庫存
-     b.若已存在購物車提示更新商品
- 4.查看/移除購物車
-   ．GET/cart?member_id={id} >取得清單
-   ．DELET/cart member_id = ? AND product_id = ? >移除購物車商品
- 5.建立訂單
-   ．POST/order
-     a.從cart撈取商品
-     b.檢查商品狀態＆庫存
-     c.建立order&order_drtail
-     d.從該會員購物車移除該商品
- 6.訂單查詢
-   ．GET/order/{member_id}
- 7.管理員功能
-   ．GET/member >瀏覽會員資訊(可by id)
-   ．PUT/member >更新會員資訊
-   ．POST/member >新增會員
-   ．DELET/member >刪除會員
-   ．GET/category >瀏覽商品類別
-   ．PUT/category >更新商品類別
-   ．POST/category >新增商品類別
-   ．DELET/category >移除商品類別
-   ．GET/product >瀏覽商品
-   ．PUT/product >更新商品
-   ．POST/product >新增商品
-   ．DELET/product >移除商品
-   ．GET/order >瀏覽訂單資訊
-   
+
+6. 訂單查詢
+
+- GET /order/{member_id} - 查詢會員訂單
+
+7. 管理員功能
+
+* 會員管理
+
+  1. GET /member - 瀏覽會員資訊 (可依 ID 查詢)
+  2. PUT /member - 更新會員資訊
+  3. POST /member - 新增會員
+  4. DELETE /member - 刪除會員
+
+
+* 商品類別管理
+
+  1. GET /category - 瀏覽商品類別
+  2. PUT /category - 更新商品類別
+  3. POST /category - 新增商品類別
+  4. DELETE /category - 移除商品類別
+
+
+* 商品管理
+
+  1. GET /product - 瀏覽商品
+  2. PUT /product - 更新商品
+  3. POST /product - 新增商品
+  4. DELETE /product - 移除商品
+
+
+* 訂單管理
+
+  1. GET /order - 瀏覽訂單資訊
