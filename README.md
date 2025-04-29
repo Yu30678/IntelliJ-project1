@@ -16,7 +16,7 @@
 - 專案管理Maven
 
 ## 專案架構
-
+```
 Backend_side_project/
 ├── pom.xml
 ├── src/main/java/
@@ -47,6 +47,7 @@ Backend_side_project/
 │       ├── DBUtil.java               # 連線池與連線關閉工具
 │       ├── LocalDateTimeAdapter.java # 處理時間序列化與反序列化操作
 │       └── GsonUtil.java             # Gson 共用工具
+```
 
 ## 環境設置與啟動
 
