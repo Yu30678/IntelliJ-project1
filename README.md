@@ -59,9 +59,8 @@ Backend_side_project/
 - 執行 JAR 檔
   java -jar target/Backend_side_project.jar
 
-- 開發模式
-  mvn compile #編譯原始碼
-
+- 開發模式  
+  mvn compile #編譯原始碼  
   mvn exec:java\
      Dexec.mainClass="main.Main" #(這邊我不太確定是不是這樣寫)
 
