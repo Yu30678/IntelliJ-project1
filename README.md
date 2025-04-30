@@ -54,7 +54,7 @@ Backend_side_project/
 1. 資料庫建立：已完成
 2. 編譯與啟動
 - 打包
-  bashmvn clean package
+  mvn clean package
 
 - 執行 JAR 檔
   java -jar target/Backend_side_project.jar
