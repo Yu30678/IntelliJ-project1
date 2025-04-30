@@ -60,18 +60,19 @@ Backend_side_project/
   java -jar target/Backend_side_project.jar
 
 - 開發模式
-  bash# 編譯原始碼
-  mvn compile
+  mvn compile #編譯原始碼
 
-# 執行主類
-mvn exec:java -Dexec.mainClass="main.Main"
-
+  mvn exec:java\
+     Dexec.mainClass="main.Main" #(這邊我不太確定是不是這樣寫)
 
 
 
-資料庫設計
+## 資料庫設計
+
 ER Diagram：詳見 Notion 文件
-核心流程
+
+## 核心流程
+
 1. 會員註冊/登入
 
 - POST /member - 建立會員
