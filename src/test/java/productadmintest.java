@@ -16,6 +16,7 @@ public class productadmintest {
     private static final Gson gson = new GsonBuilder().create();
 
     public static void main(String[] args) throws Exception {
+        /*
         // 1. 建立一個新的分類，取得 category_id
         // 1. 建立一個唯一分類
         String uniqueCat = "TestCat_" + (System.currentTimeMillis() % 100000);
@@ -37,13 +38,15 @@ public class productadmintest {
         p.setIs_active(true);
         System.out.println("CREATE product: " + sendPost(BASE_PROD_URL, gson.toJson(p)));
 
+         */
+
         // 3. 列出所有商品，並取最後一筆
         String prodsList = sendGet(BASE_PROD_URL);
         System.out.println("LIST products: " + prodsList);
         product[] prods = gson.fromJson(prodsList, product[].class);
         product last = prods[prods.length - 1];
-        int prodId = last.getProduct_id();
-
+        //int prodId = last.getProduct_id();
+        /*
         // 4. 更新該商品
         last.setName(last.getName() + "_upd");
         last.setPrice(new BigDecimal("199.99"));
@@ -52,6 +55,8 @@ public class productadmintest {
         // 5. 刪除該商品
         String delJson = "{\"product_id\":" + prodId + "}";
         System.out.println("DELETE product: " + sendDelete(BASE_PROD_URL, delJson));
+
+         */
     }
 
     private static String sendGet(String urlStr) throws IOException {

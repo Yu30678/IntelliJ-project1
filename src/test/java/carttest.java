@@ -20,9 +20,9 @@ public class carttest {
 
     public static void main(String[] args) throws Exception {
         int member_id = 30678;
-        int product_id = 2;
+        int product_id = 28;
         int invalidProductId = 9999;
-
+        /*
         // 1. 測試加入購物車（正常）
         System.out.println("➤ 測試加入購物車（正常）");
         cart c1 = new cart();
@@ -55,10 +55,14 @@ public class carttest {
                     c.getProduct_id(), c.getQuantity(), c.getCreate_at());
         }
 
+         */
+
         // 4. 刪除購物車商品
         System.out.println("➤ 測試刪除購物車商品");
         String deleteResponse = sendDelete(BASE_URL + "?member_id=" + member_id + "&product_id=" + product_id);
         System.out.println(deleteResponse);
+
+
     }
 
     // 原生 POST

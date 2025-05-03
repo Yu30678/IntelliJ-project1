@@ -27,6 +27,7 @@ public class cartController implements HttpHandler {
                 case "POST" -> handleAdd(exchange);
                 case "GET" -> handleGet(exchange);
                 case "DELETE" -> handleDelete(exchange);
+                case "PUT" -> handleUpdate(exchange);
                 default -> exchange.sendResponseHeaders(405, -1);
             }
         } catch (Exception e) {
@@ -52,7 +53,7 @@ public class cartController implements HttpHandler {
         exchange.sendResponseHeaders(result.contains("成功") || result.contains("更新") ? 200 : 400, responseBytes.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(responseBytes);
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
 
         }
@@ -75,6 +76,11 @@ public class cartController implements HttpHandler {
 
     private void handleDelete(HttpExchange exchange) throws Exception {
         String query = exchange.getRequestURI().getQuery();
+        if (query == null) {
+            // 回 400 Bad Request 或其他錯誤訊息
+            exchange.sendResponseHeaders(400, -1);
+            return;
+        }
         String[] params = query.split("&");
         int memberId = Integer.parseInt(params[0].split("=")[1]);
         int productId = Integer.parseInt(params[1].split("=")[1]);
@@ -86,6 +92,46 @@ public class cartController implements HttpHandler {
         exchange.sendResponseHeaders(success ? 200 : 400, bytes.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(bytes);
+        }
+    }
+
+    private void handleUpdate(HttpExchange exchange) throws Exception {
+        // 解析 JSON 請求
+        cart req;
+        try (InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8)) {
+            req = gson.fromJson(isr, cart.class);
+        } catch (Exception e) {
+            exchange.sendResponseHeaders(400, -1);
+            return;
+        }
+
+        // 欄位檢查
+        if (req.getMember_id() == 0 || req.getProduct_id() == 0) {
+            exchange.sendResponseHeaders(400, -1);
+            return;
+        }
+
+        try {
+            cartDAO.updateQuantity(req.getMember_id(), req.getProduct_id(), req.getQuantity());
+            String resp = gson.toJson("Quantity updated");
+            exchange.sendResponseHeaders(200, resp.getBytes().length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(resp.getBytes());
+            }
+        } catch (IllegalArgumentException e) {
+            String resp = gson.toJson(e.getMessage());
+            exchange.sendResponseHeaders(404, resp.getBytes().length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(resp.getBytes());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            String resp = gson.toJson("Error updating quantity");
+            exchange.sendResponseHeaders(500, resp.getBytes().length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(resp.getBytes());
+            }
+
         }
     }
 }

@@ -91,7 +91,7 @@ public class orderController implements HttpHandler {
             }
 
             // --- 全部檢查通過，才真正去建立訂單 ---
-            int newId = orderDAO.createOrder(memberId);
+            int newId = orderDAO.placeOrderFromCart(memberId);
             sendJson(ex, 201, "{\"order_id\":" + newId + "}");
         } catch (JsonSyntaxException e) {
             sendJson(ex, 400, "{\"error\":\"invalid JSON\"}");

@@ -84,7 +84,7 @@ public class cartDAO {
     }
 
     // 移除購物車商品
-    public boolean removeFromCart(int memberId, int productId) {
+    public boolean removeFromCart(int memberId, int productId)  {
         String sql = "DELETE FROM cart WHERE member_id = ? AND product_id = ?";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, memberId);
@@ -93,6 +93,19 @@ public class cartDAO {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+    public static void updateQuantity(int memberId, int productId, int quantity) throws Exception {
+        String sql = "UPDATE cart SET quantity = ? WHERE member_id = ? AND product_id = ?";
+        try ( Connection conn = DBUtil.getConnection();
+              PreparedStatement ps = conn.prepareStatement(sql) ) {
+            ps.setInt(1, quantity);
+            ps.setInt(2, memberId);
+            ps.setInt(3, productId);
+            int rows = ps.executeUpdate();
+            if (rows == 0) {
+                throw new IllegalArgumentException("購物車中找不到 member_id=" + memberId + ", product_id=" + productId);
+            }
         }
     }
 }

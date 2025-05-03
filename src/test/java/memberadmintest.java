@@ -18,6 +18,7 @@ public class memberadmintest {
             .create();
 
     public static void main(String[] args) throws Exception {
+        /*
         // 1. 新增會員（帶有獨特名稱以便識別）
         String uniqueSuffix = String.valueOf(System.currentTimeMillis() % 100000);
         String baseName = "Test56";
@@ -30,10 +31,13 @@ public class memberadmintest {
         m.setEmail("te66sqr" + uniqueSuffix + "@example.com");
         System.out.println("CREATE member: " + sendPost(BASE_URL, gson.toJson(m)));
 
+         */
+
         // 2. 查詢所有會員，並找出剛剛新增的那筆
         String listResp = sendGet(BASE_URL);
         System.out.println("LIST members: " + listResp);
         Member[] members = gson.fromJson(listResp, Member[].class);
+        /*
         Optional<Member> opt = Arrays.stream(members)
                 .filter(u -> (baseName + uniqueSuffix).equals(u.getName()))
                 .findFirst();
@@ -43,6 +47,8 @@ public class memberadmintest {
         }
         Member created = opt.get();
 
+         */
+        /*
         // 3. 更新該會員
         created.setName(created.getName() + "_upd");
         System.out.println("UPDATE member: " + sendPut(BASE_URL, gson.toJson(created)));
@@ -50,6 +56,8 @@ public class memberadmintest {
         // 4. 刪除該會員（此會員沒有任何關聯資料）
         String delJson = "{\"member_id\":" + created.getMember_id() + "}";
         System.out.println("DELETE member: " + sendDelete(BASE_URL, delJson));
+
+         */
     }
 
     private static String sendGet(String urlStr) throws IOException {
