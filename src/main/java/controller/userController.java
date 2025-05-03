@@ -27,6 +27,7 @@ public class userController implements HttpHandler {
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
             .create();
     private final memberDAO mDao = new memberDAO();
+    private final orderDAO oDao = new orderDAO();
 
     @Override
     public void handle(HttpExchange ex) throws IOException {
@@ -66,7 +67,9 @@ public class userController implements HttpHandler {
                 }
                 byte[] resp = json.getBytes(StandardCharsets.UTF_8);
                 ex.sendResponseHeaders(200, resp.length);
-                try (OutputStream os = ex.getResponseBody()) { os.write(resp); }
+                try (OutputStream os = ex.getResponseBody()) {
+                    os.write(resp);
+                }
                 break;
             }
             case "POST": {
@@ -77,7 +80,9 @@ public class userController implements HttpHandler {
                 String json = ok ? "{\"status\":\"created\"}" : "{\"error\":\"create failed\"}";
                 byte[] resp = json.getBytes(StandardCharsets.UTF_8);
                 ex.sendResponseHeaders(ok ? 201 : 400, resp.length);
-                try (OutputStream os = ex.getResponseBody()) { os.write(resp); }
+                try (OutputStream os = ex.getResponseBody()) {
+                    os.write(resp);
+                }
                 break;
             }
             case "PUT": {
@@ -87,7 +92,9 @@ public class userController implements HttpHandler {
                 String json = ok ? "{\"status\":\"updated\"}" : "{\"error\":\"update failed\"}";
                 byte[] resp = json.getBytes(StandardCharsets.UTF_8);
                 ex.sendResponseHeaders(ok ? 200 : 400, resp.length);
-                try (OutputStream os = ex.getResponseBody()) { os.write(resp); }
+                try (OutputStream os = ex.getResponseBody()) {
+                    os.write(resp);
+                }
                 break;
             }
             case "DELETE": {
@@ -98,14 +105,18 @@ public class userController implements HttpHandler {
                     String err = "{\"error\":\"missing member_id\"}";
                     byte[] resp = err.getBytes(StandardCharsets.UTF_8);
                     ex.sendResponseHeaders(400, resp.length);
-                    try (OutputStream os = ex.getResponseBody()) { os.write(resp); }
+                    try (OutputStream os = ex.getResponseBody()) {
+                        os.write(resp);
+                    }
                     break;
                 }
                 boolean ok = mDao.deleteMember(idNum.intValue());
                 String json = ok ? "{\"status\":\"deleted\"}" : "{\"error\":\"delete failed\"}";
                 byte[] resp = json.getBytes(StandardCharsets.UTF_8);
                 ex.sendResponseHeaders(ok ? 200 : 400, resp.length);
-                try (OutputStream os = ex.getResponseBody()) { os.write(resp); }
+                try (OutputStream os = ex.getResponseBody()) {
+                    os.write(resp);
+                }
                 break;
             }
             default:
@@ -121,7 +132,9 @@ public class userController implements HttpHandler {
                 String json = gson.toJson(list);
                 byte[] resp = json.getBytes(StandardCharsets.UTF_8);
                 ex.sendResponseHeaders(200, resp.length);
-                try (OutputStream os = ex.getResponseBody()) { os.write(resp); }
+                try (OutputStream os = ex.getResponseBody()) {
+                    os.write(resp);
+                }
                 break;
             }
             case "POST": {
@@ -131,7 +144,9 @@ public class userController implements HttpHandler {
                 String json = "{\"status\":\"created\"}";
                 byte[] resp = json.getBytes(StandardCharsets.UTF_8);
                 ex.sendResponseHeaders(201, resp.length);
-                try (OutputStream os = ex.getResponseBody()) { os.write(resp); }
+                try (OutputStream os = ex.getResponseBody()) {
+                    os.write(resp);
+                }
                 break;
             }
             case "PUT": {
@@ -141,7 +156,9 @@ public class userController implements HttpHandler {
                 String json = "{\"status\":\"updated\"}";
                 byte[] resp = json.getBytes(StandardCharsets.UTF_8);
                 ex.sendResponseHeaders(200, resp.length);
-                try (OutputStream os = ex.getResponseBody()) { os.write(resp); }
+                try (OutputStream os = ex.getResponseBody()) {
+                    os.write(resp);
+                }
                 break;
             }
             case "DELETE": {
@@ -153,7 +170,9 @@ public class userController implements HttpHandler {
                     String json = "{\"status\":\"deleted\"}";
                     byte[] resp = json.getBytes(StandardCharsets.UTF_8);
                     ex.sendResponseHeaders(200, resp.length);
-                    try (OutputStream os = ex.getResponseBody()) { os.write(resp); }
+                    try (OutputStream os = ex.getResponseBody()) {
+                        os.write(resp);
+                    }
                 } else {
                     ex.sendResponseHeaders(400, -1);
                 }
@@ -172,7 +191,9 @@ public class userController implements HttpHandler {
                 String json = gson.toJson(list);
                 byte[] resp = json.getBytes(StandardCharsets.UTF_8);
                 ex.sendResponseHeaders(200, resp.length);
-                try (OutputStream os = ex.getResponseBody()) { os.write(resp); }
+                try (OutputStream os = ex.getResponseBody()) {
+                    os.write(resp);
+                }
                 break;
             }
             case "POST": {
@@ -248,15 +269,26 @@ public class userController implements HttpHandler {
     }
 
     private void handleOrders(HttpExchange ex, String method) throws Exception {
-        if (!"GET".equals(method)) {
-            ex.sendResponseHeaders(405, -1);
-            return;
-        }
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
-        List<order> list = orderDAO.getAllOrders();
-        String json = gson.toJson(list);
-        byte[] resp = json.getBytes(StandardCharsets.UTF_8);
-        ex.sendResponseHeaders(200, resp.length);
-        try (OutputStream os = ex.getResponseBody()) { os.write(resp); }
+        switch (method) {
+            case "GET": {
+                String query = ex.getRequestURI().getQuery();
+                String json;
+                if (query != null && query.startsWith("member_id=")) {
+                    int id = Integer.parseInt(query.split("=")[1]);
+                    List<order> m = oDao.getOrdersByMemberId(id);
+                    json = gson.toJson(m);
+                } else {
+                    List<order> list = oDao.getAllOrders();
+                    json = gson.toJson(list);
+                }
+                byte[] resp = json.getBytes(StandardCharsets.UTF_8);
+                ex.sendResponseHeaders(200, resp.length);
+                try (OutputStream os = ex.getResponseBody()) {
+                    os.write(resp);
+                }
+                break;
+            }
+        }
     }
 }
