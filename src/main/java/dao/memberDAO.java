@@ -37,14 +37,14 @@ public class memberDAO {
         return list;
     }
     public boolean insertMember(Member m) {
-        String sql = "INSERT INTO member (name, password, phone, address, create_at, email) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO member (name, password, phone, address, email) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, m.getName());
             stmt.setString(2, m.getPassword());
             stmt.setString(3, m.getPhone());
             stmt.setString(4, m.getAddress());
-            stmt.setTimestamp(5, Timestamp.valueOf(m.getCreate_at()));
-            stmt.setString(6, m.getEmail());
+            //stmt.setTimestamp(5, Timestamp.valueOf(m.getCreate_at()));
+            stmt.setString(5, m.getEmail());
             stmt.executeUpdate();
             return true;
         } catch (Exception e) {

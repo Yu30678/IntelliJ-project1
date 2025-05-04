@@ -1,0 +1,556 @@
+openapi: 3.0.3
+info:
+  title: Shopping Cart API
+  description: 購物車後端服務，提供會員、商品類別、商品、購物車與訂單功能
+  version: '1.0.0'
+
+servers:
+  - url: http://localhost:8080
+    description: 本地開發伺服器
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ### 會員相關 ###
+    MemberInput:
+      type: object
+      required:
+        - name
+        - password
+        - phone
+        - email
+      properties:
+        name:
+          type: string
+        password:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        email:
+          type: string
+
+    Member:
+      type: object
+      properties:
+        member_id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        email:
+          type: string
+        create_at:
+          type: string
+          format: date-time
+
+    LoginInput:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+
+    ### 類別相關 ###
+    CategoryInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+
+    Category:
+      type: object
+      properties:
+        category_id:
+          type: integer
+        name:
+          type: string
+
+    ### 商品相關 ###
+    ProductInput:
+      type: object
+      required:
+        - name
+        - price
+        - soh
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+          format: double
+        soh:
+          type: integer
+        category_id:
+          type: integer
+        is_active:
+          type: boolean
+
+    Product:
+      type: object
+      properties:
+        product_id:
+          type: integer
+        name:
+          type: string
+        price:
+          type: number
+          format: double
+        soh:
+          type: integer
+        category_id:
+          type: integer
+        is_active:
+          type: boolean
+
+    ### 購物車相關 ###
+    CartItemInput:
+      type: object
+      required:
+        - member_id
+        - product_id
+        - quantity
+      properties:
+        member_id:
+          type: integer
+        product_id:
+          type: integer
+        quantity:
+          type: integer
+
+    CartItem:
+      allOf:
+        - $ref: '#/components/schemas/CartItemInput'
+        - type: object
+          properties:
+            create_at:
+              type: string
+              format: date-time
+
+    ### 訂單相關 ###
+    OrderInput:
+      type: object
+      required:
+        - member_id
+      properties:
+        member_id:
+          type: integer
+
+    Order:
+      type: object
+      properties:
+        order_id:
+          type: integer
+        member_id:
+          type: integer
+        create_at:
+          type: string
+          format: date-time
+
+    OrderDetail:
+      type: object
+      properties:
+        product_id:
+          type: integer
+        quantity:
+          type: integer
+        price:
+          type: number
+          format: double
+
+    OrderResponse:
+      type: object
+      properties:
+        order:
+          $ref: '#/components/schemas/Order'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderDetail'
+
+security:
+  - bearerAuth: []
+
+paths:
+  ## 會員註冊 & 登入 ##
+  /member:
+    post:
+      summary: 註冊新會員
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberInput'
+      responses:
+        '201':
+          description: 註冊成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '400':
+          description: 欄位錯誤
+
+  /member/login:
+    post:
+      summary: 會員登入（取得 JWT）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginInput'
+      responses:
+        '200':
+          description: 登入成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: 認證失敗
+
+  /members/{member_id}:
+    get:
+      summary: 查詢會員資料
+      parameters:
+        - in: path
+          name: member_id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: 會員資訊
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '404':
+          description: 找不到會員
+    put:
+      summary: 更新會員資料
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberInput'
+      parameters:
+        - in: path
+          name: member_id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: 更新成功
+        '400':
+          description: 欄位錯誤
+        '404':
+          description: 找不到會員
+
+  ## 類別管理 ##
+  /categories:
+    get:
+      summary: 列出所有商品類別
+      responses:
+        '200':
+          description: 類別清單
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+    post:
+      summary: 新增商品類別
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryInput'
+      responses:
+        '201':
+          description: 建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+
+  /categories/{category_id}:
+    get:
+      summary: 取得單一商品類別
+      parameters:
+        - in: path
+          name: category_id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: 類別資訊
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '404':
+          description: 類別不存在
+    put:
+      summary: 更新商品類別
+      parameters:
+        - in: path
+          name: category_id
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryInput'
+      responses:
+        '200':
+          description: 更新成功
+        '400':
+          description: 欄位錯誤
+        '404':
+          description: 類別不存在
+    delete:
+      summary: 刪除商品類別
+      parameters:
+        - in: path
+          name: category_id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '204':
+          description: 刪除成功
+        '404':
+          description: 類別不存在
+
+  ## 商品管理 ##
+  /products:
+    get:
+      summary: 列出所有商品（可依 category_id 篩選）
+      parameters:
+        - in: query
+          name: category_id
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 商品清單
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+    post:
+      summary: 新增商品
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '201':
+          description: 建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /products/{product_id}:
+    get:
+      summary: 查詢單一商品
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: 商品詳情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: 商品不存在
+    put:
+      summary: 更新商品
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '200':
+          description: 更新成功
+        '400':
+          description: 欄位錯誤
+        '404':
+          description: 商品不存在
+    delete:
+      summary: 下架／刪除商品
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '204':
+          description: 下架成功
+        '404':
+          description: 商品不存在
+
+  ## 購物車管理 ##
+  /cart:
+    post:
+      summary: 加入購物車
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CartItemInput'
+      responses:
+        '201':
+          description: 加入成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartItem'
+        '400':
+          description: 欄位錯誤或庫存不足
+    get:
+      summary: 查詢購物車內容
+      parameters:
+        - in: query
+          name: member_id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: 購物車列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CartItem'
+    delete:
+      summary: 移除購物車項目
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - member_id
+                - product_id
+              properties:
+                member_id:
+                  type: integer
+                product_id:
+                  type: integer
+      responses:
+        '204':
+          description: 移除成功
+        '404':
+          description: 項目不存在
+
+  ## 訂單管理 ##
+  /orders:
+    post:
+      summary: 建立訂單（從購物車搬入）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderInput'
+      responses:
+        '201':
+          description: 訂單建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: 資料錯誤或庫存不足
+    get:
+      summary: 查詢單一會員所有訂單
+      parameters:
+        - in: query
+          name: member_id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: 訂單列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+
+  /orders/{order_id}:
+    get:
+      summary: 查詢訂單明細
+      parameters:
+        - in: path
+          name: order_id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: 訂單明細
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '404':
+          description: 訂單不存在
