@@ -1,0 +1,23 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/backend-app', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/backend-app']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      [
+        'run', 'deploy', 'backend-app',
+        '--image', 'gcr.io/$PROJECT_ID/backend-app',
+        '--platform', 'managed',
+        '--region', 'asia-east1',
+        '--allow-unauthenticated',
+        '--port', '8080'
+        '--add-cloudsql-instances=able-plating-459603-n3:asia-east1:backend-db',
+        '--set-env-vars=INSTANCE_CONNECTION_NAME=able-plating-459603-n3:asia-east1:backend-db,DB_USER=root,DB_PASS=he753951,DB_NAME=Backend_side_project'
+      ]
+
+images:
+  - 'gcr.io/$PROJECT_ID/backend-app'
