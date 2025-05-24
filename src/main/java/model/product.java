@@ -10,6 +10,7 @@ public class product {
     public int category_id;
     private String category_name;
     private boolean is_active;
+    private String image_url;
 
     // Getter / Setter
     public int getProduct_id() { return product_id; }
@@ -33,4 +34,7 @@ public class product {
 
     public boolean isIs_active() { return is_active; }
     public void setIs_active(boolean is_active) { this.is_active = is_active; }
+
+    public String getImage_url() { return image_url; }
+    public void setImage_url(String image_url) { this.image_url = image_url; }
 }

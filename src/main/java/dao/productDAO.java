@@ -16,7 +16,7 @@ public class productDAO {
         try (Connection conn = DBUtil.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(
-                     "SELECT p.product_id, p.name, p.price, p.soh, p.category_id, c.name AS category_name, p.is_active " +
+                     "SELECT p.product_id, p.name, p.price, p.soh, p.category_id, c.name AS category_name, p.image_url, p.is_active " +
                              "FROM product p JOIN category c ON p.category_id = c.category_id WHERE p.is_active = 1")) {
 
             while (rs.next()) {
@@ -27,6 +27,7 @@ public class productDAO {
                 p.setSoh(rs.getInt("soh"));
                 p.setCategory_id(rs.getInt("category_id"));
                 p.setCategory_name(rs.getString("category_name"));
+                p.setImage_url(rs.getString("image_url"));
                 p.setIs_active(rs.getBoolean("is_active"));
                 products.add(p);
             }
@@ -36,7 +37,7 @@ public class productDAO {
     }
 
     public static void insertProduct(product p) throws Exception {
-        String sql = "INSERT INTO product (name, price, soh, category_id, is_active) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO product (name, price, soh, category_id, is_active, image_url) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, p.getName());
@@ -44,12 +45,13 @@ public class productDAO {
             ps.setInt(3, p.getSoh());
             ps.setInt(4, p.getCategory_id());
             ps.setBoolean(5, true);
+            ps.setString(6, p.getImage_url());
             ps.executeUpdate();
         }
     }
 
     public static void updateProduct(product p) throws Exception {
-        String sql = "UPDATE product SET name = ?, price = ?, soh = ?, category_id = ?, is_active = ? WHERE product_id = ?";
+        String sql = "UPDATE product SET name = ?, price = ?, soh = ?, category_id = ?, is_active = ? , image_url = ? WHERE product_id = ?";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, p.getName());
@@ -57,8 +59,9 @@ public class productDAO {
             ps.setInt(3, p.getSoh());
             ps.setInt(4, p.getCategory_id());
             ps.setBoolean(5, p.isIs_active());
-            ps.setInt(6, p.getProduct_id());
-            //ps.setInt(7, p.getProduct_id());
+            ps.setString(6, p.getImage_url());
+            ps.setInt(7, p.getProduct_id());
+
             ps.executeUpdate();
         }
     }

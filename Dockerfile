@@ -14,5 +14,8 @@ COPY .mvn .mvn
 RUN chmod +x mvnw
 RUN ./mvnw package -DskipTests
 
+#將images 資料夾拷貝到容器內 /opt/images
+COPY src/main/resources/images /opt/images
+
 # 執行 fat jar（如果是純 HttpServer 專案沒 Spring，請用 shade plugin）
 CMD ["java", "-jar", "target/Backend_side_project-1.0-SNAPSHOT.jar"]
