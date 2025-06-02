@@ -1,21 +1,20 @@
-FROM eclipse-temurin:21-jdk
+# 第一階段：使用 Maven 編譯並產生 fat-jar
+FROM maven:3.9-eclipse-temurin-21 AS builder
+WORKDIR /build
 
-# 設定工作目錄
-WORKDIR /app
-
-# 複製 pom.xml 和 src 檔案
 COPY pom.xml .
 COPY src ./src
+RUN mvn clean package -DskipTests
 
-# 使用 Maven Wrapper 建構專案（你必須有 mvnw）
-COPY mvnw .
-COPY .mvn .mvn
+# 第二階段：僅用 JRE 執行
+FROM eclipse-temurin:21-jre-jammy
+WORKDIR /app
 
-RUN chmod +x mvnw
-RUN ./mvnw package -DskipTests
+# 從 builder 階段複製包含所有依賴的 Jar，並重新命名為 app.jar
+COPY --from=builder /build/target/Backend_side_project-1.0-SNAPSHOT-jar-with-dependencies.jar ./app.jar
 
-#將images 資料夾拷貝到容器內 /opt/images
-COPY src/main/resources/images /opt/images
+# 對外開放應用程式監聽的埠號（與 SERVER_PORT 一致）
+EXPOSE 8080
 
-# 執行 fat jar（如果是純 HttpServer 專案沒 Spring，請用 shade plugin）
-CMD ["java", "-jar", "target/Backend_side_project-1.0-SNAPSHOT.jar"]
+# 啟動指令
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

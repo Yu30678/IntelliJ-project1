@@ -1,5 +1,3 @@
-CREATE DATABASE IF NOT EXISTS Backend_side_project;
-USE Backend_side_project;
 -- MySQL dump 10.13  Distrib 9.3.0, for macos15.2 (arm64)
 --
 -- Host: localhost    Database: Backend_side_project
@@ -29,10 +27,10 @@ CREATE TABLE `cart` (
   `product_id` int NOT NULL,
   `quantity` int NOT NULL,
   `create_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  KEY `cart_ibfk_2` (`product_id`),
   KEY `cart_ibfk_1_idx` (`member_id`),
-  CONSTRAINT `cart_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`),
-  CONSTRAINT `cart_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `product` (`product_id`)
+  KEY `cart_ibfk_2` (`product_id`),
+  CONSTRAINT `cart_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `cart_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `product` (`product_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -42,7 +40,7 @@ CREATE TABLE `cart` (
 
 LOCK TABLES `cart` WRITE;
 /*!40000 ALTER TABLE `cart` DISABLE KEYS */;
-INSERT INTO `cart` VALUES (50698,2,1,'2025-04-21 22:15:54'),(50699,2,1,'2025-04-21 22:20:50'),(50709,2,1,'2025-04-22 16:13:48'),(50711,2,5,'2025-04-22 16:16:02'),(30678,3,1,'2025-04-26 21:22:47'),(30678,8,1,'2025-04-24 12:01:00'),(50690,7,1,'2025-04-24 12:01:00'),(50690,13,1,'2025-05-02 17:04:59'),(50699,3,1,'2025-04-26 11:53:09'),(50690,6,9,'2025-01-01 00:00:00'),(50717,23,2,'2025-04-26 12:26:00'),(50717,26,2,'2025-05-18 12:11:25'),(50717,25,2,'2025-05-18 13:21:31');
+INSERT INTO `cart` VALUES (50698,2,1,'2025-04-21 22:15:54'),(50699,2,1,'2025-04-21 22:20:50'),(50709,2,1,'2025-04-22 16:13:48'),(50711,2,5,'2025-04-22 16:16:02'),(30678,3,1,'2025-04-26 21:22:47'),(30678,8,1,'2025-04-24 12:01:00'),(50690,7,1,'2025-04-24 12:01:00'),(50690,13,1,'2025-05-02 17:04:59'),(50699,3,1,'2025-04-26 11:53:09'),(50690,6,9,'2025-01-01 00:00:00'),(50717,23,2,'2025-04-26 12:26:00'),(50717,25,2,'2025-05-18 13:21:31');
 /*!40000 ALTER TABLE `cart` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -115,7 +113,7 @@ CREATE TABLE `order` (
   `create_at` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`order_id`),
   KEY `order_ibfk_1_idx` (`member_id`),
-  CONSTRAINT `order_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`)
+  CONSTRAINT `order_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=81 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -144,8 +142,8 @@ CREATE TABLE `order_detail` (
   UNIQUE KEY `order_id` (`order_id`,`product_id`),
   KEY `order_detail_ibfk_1_idx` (`order_id`),
   KEY `order_detail_ibfk_2_idx` (`product_id`),
-  CONSTRAINT `order_detail_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `order` (`order_id`),
-  CONSTRAINT `order_detail_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `product` (`product_id`)
+  CONSTRAINT `order_detail_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `order` (`order_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `order_detail_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `product` (`product_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -155,7 +153,7 @@ CREATE TABLE `order_detail` (
 
 LOCK TABLES `order_detail` WRITE;
 /*!40000 ALTER TABLE `order_detail` DISABLE KEYS */;
-INSERT INTO `order_detail` VALUES (1,1,1,12000.00),(3,1,3,49800.00),(5,1,1,49800.00),(7,1,1,49800.00),(9,1,1,49800.00),(11,3,1,3500.00),(13,2,2,72300.00),(15,1,1,49800.00),(15,2,1,72300.00),(18,5,45,30.00),(20,4,1,50.00),(21,8,1,49999.00),(22,2,1,72300.00),(23,1,1,799.00),(24,1,1,799.00),(25,2,2,72300.00),(26,7,3,36999.00),(27,3,2,3500.00),(28,4,4,50.00),(29,4,4,50.00),(30,13,13,599.99),(77,26,2,99.99),(78,1,5,199.99),(79,25,1,99.99),(80,2,5,72300.00);
+INSERT INTO `order_detail` VALUES (1,1,1,12000.00),(3,1,3,49800.00),(5,1,1,49800.00),(7,1,1,49800.00),(9,1,1,49800.00),(11,3,1,3500.00),(13,2,2,72300.00),(15,1,1,49800.00),(15,2,1,72300.00),(18,5,45,30.00),(20,4,1,50.00),(21,8,1,49999.00),(22,2,1,72300.00),(23,1,1,799.00),(24,1,1,799.00),(25,2,2,72300.00),(26,7,3,36999.00),(27,3,2,3500.00),(28,4,4,50.00),(29,4,4,50.00),(30,13,13,599.99),(78,1,5,199.99),(79,25,1,99.99),(80,2,5,72300.00);
 /*!40000 ALTER TABLE `order_detail` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -177,7 +175,7 @@ CREATE TABLE `product` (
   PRIMARY KEY (`product_id`),
   UNIQUE KEY `product_name_UNIQUE` (`name`),
   KEY `p001_idx` (`category_id`),
-  CONSTRAINT `p001` FOREIGN KEY (`category_id`) REFERENCES `category` (`category_id`)
+  CONSTRAINT `p001` FOREIGN KEY (`category_id`) REFERENCES `category` (`category_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -187,7 +185,7 @@ CREATE TABLE `product` (
 
 LOCK TABLES `product` WRITE;
 /*!40000 ALTER TABLE `product` DISABLE KEYS */;
-INSERT INTO `product` VALUES (1,'30678_707_upd',199.99,95,6,1,'https://backend-app-778022680067.asia-east1.run.app/images/test.png'),(2,'MacBook pro 14\"',72300.00,15,6,1,'https://backend-app-778022680067.asia-east1.run.app/images/macbook14.jpeg'),(3,'飛利浦全自動咖啡機',3500.00,4,5,1,'https://backend-app-778022680067.asia-east1.run.app/images/ccoffee.jpeg'),(4,'巧克力',50.00,0,5,0,'https://backend-app-778022680067.asia-east1.run.app/images/choo.jpeg'),(5,'古早味紅茶',30.00,0,5,0,'https://backend-app-778022680067.asia-east1.run.app/images/blacktea.jpeg'),(6,'MacBook Pro',59999.00,9,6,1,'https://backend-app-778022680067.asia-east1.run.app/images/macbook14.jpeg'),(7,'iPhone 15',36999.00,0,2,0,'https://backend-app-778022680067.asia-east1.run.app/images/iphone15.jpeg'),(8,'ASUS ROG',3500.00,5,5,1,'https://backend-app-778022680067.asia-east1.run.app/images/ROG.jpeg'),(13,'藍牙滑鼠',599.99,17,5,1,'https://backend-app-778022680067.asia-east1.run.app/images/mouse.jpeg'),(14,'irock藍牙滑鼠',879.99,30,5,0,'https://backend-app-778022680067.asia-east1.run.app/images/irock.jpeg'),(23,'TestProduct',123.45,50,5,1,'https://backend-app-778022680067.asia-east1.run.app/images/test.png'),(25,'TestProduct_71',99.99,99,6,1,'https://backend-app-778022680067.asia-east1.run.app/images/test.png'),(26,'TestProduct_875',99.99,98,6,1,'https://backend-app-778022680067.asia-east1.run.app/images/test.png'),(29,'30678_110',99.99,100,6,1,'https://backend-app-778022680067.asia-east1.run.app/images/test.png'),(30,'30678_260',99.99,100,6,1,'https://backend-app-778022680067.asia-east1.run.app/images/test.png'),(31,'30678_32',99.99,100,6,1,'https://backend-app-778022680067.asia-east1.run.app/images/test.png'),(35,'30678_980_upd',199.99,100,6,1,'https://backend-app-778022680067.asia-east1.run.app/images/test.png'),(38,'noStock_9776',100.00,0,8,0,'https://backend-app-778022680067.asia-east1.run.app/images/test.png'),(45,'超屌電視_',966.00,5,11,1,'https://backend-app-778022680067.asia-east1.run.app/images/tv.png'),(46,'30678_50_upd',199.99,100,6,1,'https://backend-app-778022680067.asia-east1.run.app/images/test.png'),(47,'超屌手機',987.00,567,11,1,'https://backend-app-778022680067.asia-east1.run.app/images/phone.png'),(48,'超屌音響',969.00,20,5,1,'https://backend-app-778022680067.asia-east1.run.app/images/12.png');
+INSERT INTO `product` VALUES (1,'30678_707_upd',199.99,95,6,1,'http://localhost:8080/images/test.png'),(2,'MacBook pro 14\"',72300.00,15,6,1,'http://localhost:8080/images/macbook14.jpeg'),(3,'飛利浦全自動咖啡機',3500.00,4,5,1,'http://localhost:8080/images/ccoffee.jpeg'),(4,'巧克力',50.00,0,5,0,'http://localhost:8080/images/choo.jpeg'),(5,'古早味紅茶',30.00,0,5,0,'http://localhost:8080/images/blacktea.jpeg'),(6,'MacBook Pro',59999.00,9,6,1,'http://localhost:8080/images/macbook14.jpeg'),(7,'iPhone 15',36999.00,0,2,0,'http://localhost:8080/images/iphone15.jpeg'),(8,'ASUS ROG',3500.00,5,5,1,'http://localhost:8080/images/ROG.jpeg'),(13,'藍牙滑鼠',599.99,17,5,1,'http://localhost:8080/images/mouse.jpeg'),(14,'irock藍牙滑鼠',879.99,30,5,0,'http://localhost:8080/images/irock.jpeg'),(23,'TestProduct',123.45,50,5,1,'http://localhost:8080/images/test.png'),(25,'TestProduct_71',99.99,99,6,1,'http://localhost:8080/images/test.png'),(29,'30678_110',99.99,100,6,1,'http://localhost:8080/images/test.png'),(30,'30678_260',99.99,100,6,1,'http://localhost:8080/images/test.png'),(31,'30678_32',99.99,100,6,1,'http://localhost:8080/images/test.png'),(35,'30678_980_upd',199.99,100,6,1,'http://localhost:8080/images/test.png'),(38,'noStock_9776',100.00,0,8,0,'http://localhost:8080/images/test.png'),(45,'超屌電視_',966.00,5,11,1,'http://localhost:8080/images/tv.png'),(46,'30678_50_upd',199.99,100,6,1,'http://localhost:8080/images/test.png'),(47,'超屌手機',987.00,567,11,1,'http://localhost:8080/images/phone.png'),(48,'超屌音響',969.00,20,5,1,'http://localhost:8080/images/12.png');
 /*!40000 ALTER TABLE `product` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -228,4 +226,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-05-22 22:06:05
+-- Dump completed on 2025-05-25 19:44:21

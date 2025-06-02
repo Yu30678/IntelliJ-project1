@@ -19,6 +19,14 @@
 ```
 Backend_side_project/
 ├── pom.xml
+├── .mvn/wrapper
+│   ├── maven-wrapper.jar
+│   ├── maven-wrapper.properties
+│   └── MavenWrapperDownloader.java
+├── docs
+│   ├── openapi.json
+│   ├── openapi.yaml
+│   └── openapi_from_ppostman.yaml
 ├── src/main/java/
 │   ├── Main.java           # 啟動 HttpServer
 │   ├── controller/
@@ -45,8 +53,19 @@ Backend_side_project/
 │   │   └── WebServer.java
 │   └── util/
 │       ├── DBUtil.java               # 連線池與連線關閉工具
+│       ├── StaticFileHandler         # 靜態檔案處理(本專案用於處理圖片)
 │       ├── LocalDateTimeAdapter.java # 處理時間序列化與反序列化操作
 │       └── GsonUtil.java             # Gson 共用工具
+├── .dockerignore
+├── .gitignore
+├── Backend_side_project.iml
+├── cloudbuild.yaml
+├── docker-compose.yml
+├── Dockerfile
+├── mvnw
+├── mvnw.cmd
+├── pom.xml
+└──schema.sql
 ```
 
 ## 環境設置與啟動

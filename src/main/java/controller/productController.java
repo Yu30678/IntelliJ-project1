@@ -91,9 +91,13 @@ public class productController implements HttpHandler {
     }
 
     private void sendResponse(HttpExchange exchange, int statusCode, String response) throws IOException {
-        exchange.sendResponseHeaders(statusCode, response.getBytes().length);
-        OutputStream os = exchange.getResponseBody();
-        os.write(response.getBytes());
-        os.close();
+        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+        byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
+        // 只呼叫一次 sendResponseHeaders
+        exchange.sendResponseHeaders(statusCode, bytes.length);
+        // 只寫一次 body
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(bytes);
+        }
     }
 }
