@@ -14,6 +14,36 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Main {
+    
+    // CORS wrapper class
+    static class CorsHandler implements HttpHandler {
+        private final HttpHandler wrapped;
+        private final String allowedOrigin;
+        
+        public CorsHandler(HttpHandler wrapped, String allowedOrigin) {
+            this.wrapped = wrapped;
+            this.allowedOrigin = allowedOrigin;
+        }
+        
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            // 設定 CORS headers
+            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", allowedOrigin);
+            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+            exchange.getResponseHeaders().add("Access-Control-Max-Age", "3600");
+            
+            // 處理 preflight requests (OPTIONS)
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(200, -1);
+                return;
+            }
+            
+            // 委託給原始 handler
+            wrapped.handle(exchange);
+        }
+    }
+    
     public static void main (String[] args) throws IOException {
         System.out.println(">>> Java backend server 啟動中...");
         System.out.flush();
@@ -27,15 +57,18 @@ public class Main {
         }
 
         HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+        
+        String allowedOrigin = "http://localhost:3000";
 
-        server.createContext("/member" , new memberController());
-        server.createContext("/product", new productController());
-        server.createContext("/cart", new cartController());
-        server.createContext("/order", new orderController());
-        server.createContext("/order_detail", new orderController());
-        server.createContext("/user", new userController());
+        server.createContext("/member" , new CorsHandler(new memberController(), allowedOrigin));
+        server.createContext("/product", new CorsHandler(new productController(), allowedOrigin));
+        server.createContext("/cart", new CorsHandler(new cartController(), allowedOrigin));
+        server.createContext("/order", new CorsHandler(new orderController(), allowedOrigin));
+        server.createContext("/order_detail", new CorsHandler(new orderController(), allowedOrigin));
+        server.createContext("/user", new CorsHandler(new userController(), allowedOrigin));
+        
         //server.createContext("/images", new StaticFileHandler("/opt/images"));
-        server.createContext("/images", new HttpHandler() {
+        server.createContext("/images", new CorsHandler(new HttpHandler() {
             @Override
             public void handle(HttpExchange exchange) throws IOException {
                 String relPath = exchange.getRequestURI().getPath().replaceFirst("/images/", "");
@@ -58,10 +91,11 @@ public class Main {
                     exchange.sendResponseHeaders(404, -1);
                 }
             }
-        });
+        }, allowedOrigin));
 
         server.setExecutor(null);
         server.start();
         System.out.println("Server started on http://localhost:8080");
+        System.out.println("CORS enabled for: " + allowedOrigin);
     }
 }
