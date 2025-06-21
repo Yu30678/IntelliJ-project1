@@ -2,6 +2,8 @@ package controller;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonNull;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import dao.productDAO;
@@ -35,53 +37,100 @@ public class productController implements HttpHandler {
                 handleDelete(exchange);
                 break;
             default:
-                exchange.sendResponseHeaders(405, -1); // Method Not Allowed
+                JsonObject errorResponse = new JsonObject();
+                errorResponse.addProperty("status", 405);
+                errorResponse.addProperty("message", "不支援的HTTP方法");
+                errorResponse.add("data", JsonNull.INSTANCE);
+                sendResponse(exchange, 405, gson.toJson(errorResponse));
         }
     }
     //取得所有商品資訊
     private void handleGet(HttpExchange exchange) throws IOException {
+        JsonObject response = new JsonObject();
+        int statusCode;
+        
         try {
             productDAO.deactivateOutOfStockProducts();
             List<product> products = productDAO.getAllProducts();
-            String response = gson.toJson(products);
-            sendResponse(exchange, 200, response);
+            statusCode = 200;
+            response.addProperty("status", statusCode);
+            response.addProperty("message", "商品查詢成功");
+            response.add("data", gson.toJsonTree(products));
         } catch (Exception e) {
             e.printStackTrace();
-            sendResponse(exchange, 500, gson.toJson("Error loading products"));
+            statusCode = 500;
+            response.addProperty("status", statusCode);
+            response.addProperty("message", "商品查詢失敗：" + e.getMessage());
+            response.add("data", JsonNull.INSTANCE);
         }
+        
+        sendResponse(exchange, statusCode, gson.toJson(response));
     }
     //新增商品
     private void handlePost(HttpExchange exchange) throws IOException {
-        product newProduct = parseRequestBody(exchange, product.class);
+        JsonObject response = new JsonObject();
+        int statusCode;
+        
         try {
+            product newProduct = parseRequestBody(exchange, product.class);
             productDAO.insertProduct(newProduct);
-            sendResponse(exchange, 201, gson.toJson("Product created successfully"));
+            statusCode = 201;
+            response.addProperty("status", statusCode);
+            response.addProperty("message", "商品新增成功");
+            response.add("data", gson.toJsonTree(newProduct));
         } catch (Exception e) {
             e.printStackTrace();
-            sendResponse(exchange, 500, gson.toJson("Error creating product"));
+            statusCode = 500;
+            response.addProperty("status", statusCode);
+            response.addProperty("message", "商品新增失敗：" + e.getMessage());
+            response.add("data", JsonNull.INSTANCE);
         }
+        
+        sendResponse(exchange, statusCode, gson.toJson(response));
     }
     //更新商品資訊
     private void handlePut(HttpExchange exchange) throws IOException {
-        product updatedProduct = parseRequestBody(exchange, product.class);
+        JsonObject response = new JsonObject();
+        int statusCode;
+        
         try {
+            product updatedProduct = parseRequestBody(exchange, product.class);
             productDAO.updateProduct(updatedProduct);
-            sendResponse(exchange, 200, gson.toJson("Product updated successfully"));
+            statusCode = 200;
+            response.addProperty("status", statusCode);
+            response.addProperty("message", "商品更新成功");
+            response.add("data", gson.toJsonTree(updatedProduct));
         } catch (Exception e) {
             e.printStackTrace();
-            sendResponse(exchange, 500, gson.toJson("Error updating product"));
+            statusCode = 500;
+            response.addProperty("status", statusCode);
+            response.addProperty("message", "商品更新失敗：" + e.getMessage());
+            response.add("data", JsonNull.INSTANCE);
         }
+        
+        sendResponse(exchange, statusCode, gson.toJson(response));
     }
     //刪除商品
     private void handleDelete(HttpExchange exchange) throws IOException {
-        product deletProduct = parseRequestBody(exchange, product.class);
+        JsonObject response = new JsonObject();
+        int statusCode;
+        
         try {
+            product deletProduct = parseRequestBody(exchange, product.class);
             productDAO.deleteProduct(deletProduct.getProduct_id());
-            sendResponse(exchange, 200, gson.toJson("Product deleted successfully"));
+            statusCode = 200;
+            response.addProperty("status", statusCode);
+            response.addProperty("message", "商品刪除成功");
+            response.add("data", JsonNull.INSTANCE);
         } catch (Exception e) {
             e.printStackTrace();
-            sendResponse(exchange, 500, gson.toJson("Error deleting product"));
+            statusCode = 500;
+            response.addProperty("status", statusCode);
+            response.addProperty("message", "商品刪除失敗：" + e.getMessage());
+            response.add("data", JsonNull.INSTANCE);
         }
+        
+        sendResponse(exchange, statusCode, gson.toJson(response));
         System.out.println("🗑️ productController.handleDelete invoked");
     }
 

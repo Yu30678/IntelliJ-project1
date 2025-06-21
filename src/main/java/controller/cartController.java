@@ -1,6 +1,9 @@
 package controller;
 import com.google.gson.GsonBuilder;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonNull;
+import util.GsonUtil;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import dao.cartDAO;
@@ -16,9 +19,7 @@ public class cartController implements HttpHandler {
 
     //private final Gson gson = new Gson();
     private final cartDAO dao = new cartDAO();
-    private final Gson gson = new GsonBuilder()
-            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
-            .create();
+    private final Gson gson = GsonUtil.getGson();
 
     @Override
     public void handle(HttpExchange exchange) {
@@ -41,97 +42,160 @@ public class cartController implements HttpHandler {
     }
 
     private void handleAdd(HttpExchange exchange) throws Exception {
-        InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8);
-        cart cartItem = gson.fromJson(reader, cart.class);
-        if (cartItem.getCreate_at() == null) {
-            cartItem.setCreate_at(java.time.LocalDateTime.now());
-        }
+        JsonObject wrapper = new JsonObject();
+        int statusCode;
+        
+        try (InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8)) {
+            cart cartItem = gson.fromJson(reader, cart.class);
+            if (cartItem.getCreate_at() == null) {
+                cartItem.setCreate_at(java.time.LocalDateTime.now());
+            }
 
-        String result = dao.addToCart(cartItem);
-
-        byte[] responseBytes = result.getBytes(StandardCharsets.UTF_8);
-        exchange.sendResponseHeaders(result.contains("成功") || result.contains("更新") ? 200 : 400, responseBytes.length);
-        try (OutputStream os = exchange.getResponseBody()) {
-            os.write(responseBytes);
+            String result = dao.addToCart(cartItem);
+            boolean success = result.contains("成功") || result.contains("更新");
+            
+            statusCode = success ? 200 : 400;
+            wrapper.addProperty("status", statusCode);
+            wrapper.addProperty("message", result);
+            wrapper.add("data", success ? gson.toJsonTree(cartItem) : JsonNull.INSTANCE);
+            
         } catch (Exception e) {
             e.printStackTrace();
-
+            statusCode = 500;
+            wrapper.addProperty("status", statusCode);
+            wrapper.addProperty("message", "伺服器錯誤：" + e.getMessage());
+            wrapper.add("data", JsonNull.INSTANCE);
+        }
+        
+        String response = gson.toJson(wrapper);
+        byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
+        exchange.sendResponseHeaders(statusCode, bytes.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(bytes);
         }
     }
 
     private void handleGet(HttpExchange exchange) throws Exception {
-        String query = exchange.getRequestURI().getQuery();
-        int memberId = Integer.parseInt(query.split("=")[1]);
-
-        List<cart> carts = dao.getCartByMemberId(memberId);
-        String response = gson.toJson(carts);
-
+        JsonObject wrapper = new JsonObject();
+        int statusCode;
+        
+        try (InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8)) {
+            JsonObject req = gson.fromJson(reader, JsonObject.class);
+            
+            if (req == null || !req.has("member_id")) {
+                statusCode = 400;
+                wrapper.addProperty("status", statusCode);
+                wrapper.addProperty("message", "缺少 member_id 參數");
+                wrapper.add("data", JsonNull.INSTANCE);
+            } else {
+                int memberId = req.get("member_id").getAsInt();
+                List<cart> carts = dao.getCartByMemberId(memberId);
+                
+                statusCode = 200;
+                wrapper.addProperty("status", statusCode);
+                wrapper.addProperty("message", "查詢成功");
+                wrapper.add("data", gson.toJsonTree(carts));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            statusCode = 500;
+            wrapper.addProperty("status", statusCode);
+            wrapper.addProperty("message", "伺服器錯誤：" + e.getMessage());
+            wrapper.add("data", JsonNull.INSTANCE);
+        }
+        
+        String response = gson.toJson(wrapper);
         byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set("Content-Type", "application/json");
-        exchange.sendResponseHeaders(200, bytes.length);
+        exchange.sendResponseHeaders(statusCode, bytes.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(bytes);
         }
     }
 
     private void handleDelete(HttpExchange exchange) throws Exception {
-        String query = exchange.getRequestURI().getQuery();
-        if (query == null) {
-            // 回 400 Bad Request 或其他錯誤訊息
-            exchange.sendResponseHeaders(400, -1);
-            return;
+        JsonObject wrapper = new JsonObject();
+        int statusCode;
+        
+        try (InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8)) {
+            JsonObject req = gson.fromJson(reader, JsonObject.class);
+            
+            if (req == null || !req.has("member_id") || !req.has("product_id")) {
+                statusCode = 400;
+                wrapper.addProperty("status", statusCode);
+                wrapper.addProperty("message", "缺少 member_id 或 product_id 參數");
+                wrapper.add("data", JsonNull.INSTANCE);
+            } else {
+                int memberId = req.get("member_id").getAsInt();
+                int productId = req.get("product_id").getAsInt();
+
+                boolean success = dao.removeFromCart(memberId, productId);
+                statusCode = success ? 200 : 400;
+                wrapper.addProperty("status", statusCode);
+                wrapper.addProperty("message", success ? "移除成功" : "移除失敗");
+                wrapper.add("data", JsonNull.INSTANCE);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            statusCode = 500;
+            wrapper.addProperty("status", statusCode);
+            wrapper.addProperty("message", "伺服器錯誤：" + e.getMessage());
+            wrapper.add("data", JsonNull.INSTANCE);
         }
-        String[] params = query.split("&");
-        int memberId = Integer.parseInt(params[0].split("=")[1]);
-        int productId = Integer.parseInt(params[1].split("=")[1]);
-
-        boolean success = dao.removeFromCart(memberId, productId);
-        String response = success ? "移除成功" : "移除失敗";
-
+        
+        String response = gson.toJson(wrapper);
         byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
-        exchange.sendResponseHeaders(success ? 200 : 400, bytes.length);
+        exchange.sendResponseHeaders(statusCode, bytes.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(bytes);
         }
     }
 
     private void handleUpdate(HttpExchange exchange) throws Exception {
-        // 解析 JSON 請求
-        cart req;
+        JsonObject wrapper = new JsonObject();
+        int statusCode;
+        
         try (InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8)) {
-            req = gson.fromJson(isr, cart.class);
+            cart req = gson.fromJson(isr, cart.class);
+            
+            // 欄位檢查
+            if (req.getMember_id() == 0 || req.getProduct_id() == 0) {
+                statusCode = 400;
+                wrapper.addProperty("status", statusCode);
+                wrapper.addProperty("message", "member_id 和 product_id 為必要欄位");
+                wrapper.add("data", JsonNull.INSTANCE);
+            } else {
+                try {
+                    cartDAO.updateQuantity(req.getMember_id(), req.getProduct_id(), req.getQuantity());
+                    statusCode = 200;
+                    wrapper.addProperty("status", statusCode);
+                    wrapper.addProperty("message", "數量更新成功");
+                    wrapper.add("data", gson.toJsonTree(req));
+                } catch (IllegalArgumentException e) {
+                    statusCode = 404;
+                    wrapper.addProperty("status", statusCode);
+                    wrapper.addProperty("message", e.getMessage());
+                    wrapper.add("data", JsonNull.INSTANCE);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    statusCode = 500;
+                    wrapper.addProperty("status", statusCode);
+                    wrapper.addProperty("message", "更新數量時發生錯誤");
+                    wrapper.add("data", JsonNull.INSTANCE);
+                }
+            }
         } catch (Exception e) {
-            exchange.sendResponseHeaders(400, -1);
-            return;
+            statusCode = 400;
+            wrapper.addProperty("status", statusCode);
+            wrapper.addProperty("message", "請求格式錯誤");
+            wrapper.add("data", JsonNull.INSTANCE);
         }
-
-        // 欄位檢查
-        if (req.getMember_id() == 0 || req.getProduct_id() == 0) {
-            exchange.sendResponseHeaders(400, -1);
-            return;
-        }
-
-        try {
-            cartDAO.updateQuantity(req.getMember_id(), req.getProduct_id(), req.getQuantity());
-            String resp = gson.toJson("Quantity updated");
-            exchange.sendResponseHeaders(200, resp.getBytes().length);
-            try (OutputStream os = exchange.getResponseBody()) {
-                os.write(resp.getBytes());
-            }
-        } catch (IllegalArgumentException e) {
-            String resp = gson.toJson(e.getMessage());
-            exchange.sendResponseHeaders(404, resp.getBytes().length);
-            try (OutputStream os = exchange.getResponseBody()) {
-                os.write(resp.getBytes());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            String resp = gson.toJson("Error updating quantity");
-            exchange.sendResponseHeaders(500, resp.getBytes().length);
-            try (OutputStream os = exchange.getResponseBody()) {
-                os.write(resp.getBytes());
-            }
-
+        
+        String response = gson.toJson(wrapper);
+        byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
+        exchange.sendResponseHeaders(statusCode, bytes.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(bytes);
         }
     }
 }

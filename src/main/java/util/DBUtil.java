@@ -7,7 +7,7 @@ public class DBUtil {
     // 先嘗試讀環境變數，沒設定就回本機預設
     private static final String URL  = System.getenv("DB_URL") != null
             ? System.getenv("DB_URL")
-            : "jdbc:mysql://localhost:3306/Backend_side_project?useSSL=false&serverTimezone=UTC";
+            : "jdbc:mysql://localhost:3306/Backend_side_project?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
     private static final String USER = System.getenv("DB_USER") != null
             ? System.getenv("DB_USER")
             : "root";

@@ -2,9 +2,7 @@ package dao;
 import model.Category;
 import util.DBUtil;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 public class categoryDAO {
@@ -36,26 +34,41 @@ public class categoryDAO {
         }
         return null;
     }
-    public static void insertCategory(Category c) throws Exception {
+    public static boolean insertCategory(Category c) throws Exception {
         String sql = "INSERT INTO category (name) VALUES (?)";
-        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, c.getName());
-            ps.executeUpdate();
+            int affected = ps.executeUpdate();
+
+            // 新增成功才取得產生的 id
+            if (affected > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        c.setCategory_id(rs.getInt(1));
+                    }
+                }
+                return true;
+            } else {
+                return false;
+            }
         }
     }
-    public static void updateCategory(Category c) throws Exception {
+    public static boolean updateCategory(Category c) throws Exception {
         String sql = "UPDATE category SET name = ? WHERE category_id = ?";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, c.getName());
             ps.setInt(2, c.getCategory_id());
-            ps.executeUpdate();
+            int affected = ps.executeUpdate();
+            return affected > 0;
         }
     }
-    public static void deleteCategory(int id) throws Exception {
+    public static boolean deleteCategory(int id) throws Exception {
         String sql = "DELETE FROM category WHERE category_id = ?";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
-            ps.executeUpdate();
+            int affected = ps.executeUpdate();
+            return affected > 0;
         }
     }
 }

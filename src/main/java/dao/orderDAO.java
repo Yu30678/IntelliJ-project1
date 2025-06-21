@@ -162,21 +162,95 @@ public class orderDAO {
         }
     }
     public static void updateOrder(order o) throws Exception {
-        String sql = "UPDATE `order` SET member_id = ?, create_at = ? WHERE order_id = ?";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, o.getMember_id());
-            ps.setTimestamp(2, Timestamp.valueOf(o.getCreate_at()));
-            ps.setInt(3, o.getOrder_id());
-            ps.executeUpdate();
+        String sqlUpdateOrder = "UPDATE `order` SET member_id = ?, create_at = ? WHERE order_id = ?";
+        String sqlDeleteDetails = "DELETE FROM order_detail WHERE order_id = ?";
+        String sqlInsertDetail = "INSERT INTO order_detail (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)";
+
+        try (Connection conn = DBUtil.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // 1. 更新主訂單
+                try (PreparedStatement ps = conn.prepareStatement(sqlUpdateOrder)) {
+                    ps.setInt(1, o.getMember_id());
+                    ps.setTimestamp(2, Timestamp.valueOf(o.getCreate_at()));
+                    ps.setInt(3, o.getOrder_id());
+                    ps.executeUpdate();
+                }
+                
+                // 2. 如果有訂單明細，先刪除舊的再新增新的
+                if (o.getOrderDetails() != null && !o.getOrderDetails().isEmpty()) {
+                    // 刪除舊的明細
+                    try (PreparedStatement ps = conn.prepareStatement(sqlDeleteDetails)) {
+                        ps.setInt(1, o.getOrder_id());
+                        ps.executeUpdate();
+                    }
+                    
+                    // 新增新的明細，價格從商品表取得當前價格
+                    String sqlGetPrice = "SELECT price FROM product WHERE product_id = ?";
+                    try (PreparedStatement psDetail = conn.prepareStatement(sqlInsertDetail);
+                         PreparedStatement psPrice = conn.prepareStatement(sqlGetPrice)) {
+                        
+                        for (order_detail detail : o.getOrderDetails()) {
+                            // 從商品表取得當前價格
+                            psPrice.setInt(1, detail.getProduct_id());
+                            BigDecimal currentPrice;
+                            try (ResultSet rs = psPrice.executeQuery()) {
+                                if (rs.next()) {
+                                    currentPrice = rs.getBigDecimal("price");
+                                } else {
+                                    throw new SQLException("Product not found: " + detail.getProduct_id());
+                                }
+                            }
+                            
+                            // 設定 detail 物件的 order_id 和 price，這樣回傳時會有正確的值
+                            detail.setOrder_id(o.getOrder_id());
+                            detail.setPrice(currentPrice);
+                            
+                            psDetail.setInt(1, o.getOrder_id());
+                            psDetail.setInt(2, detail.getProduct_id());
+                            psDetail.setInt(3, detail.getQuantity());
+                            psDetail.setBigDecimal(4, currentPrice); // 使用當前商品價格
+                            psDetail.addBatch();
+                        }
+                        psDetail.executeBatch();
+                    }
+                }
+                
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
         }
     }
     public static void deleteOrder(int orderId) throws Exception {
-        String sql = "DELETE FROM `order` WHERE order_id = ?";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, orderId);
-            ps.executeUpdate();
+        String sqlDeleteDetails = "DELETE FROM order_detail WHERE order_id = ?";
+        String sqlDeleteOrder = "DELETE FROM `order` WHERE order_id = ?";
+        
+        try (Connection conn = DBUtil.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // 先刪除訂單明細
+                try (PreparedStatement ps = conn.prepareStatement(sqlDeleteDetails)) {
+                    ps.setInt(1, orderId);
+                    ps.executeUpdate();
+                }
+                
+                // 再刪除主訂單
+                try (PreparedStatement ps = conn.prepareStatement(sqlDeleteOrder)) {
+                    ps.setInt(1, orderId);
+                    ps.executeUpdate();
+                }
+                
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
         }
     }
 }

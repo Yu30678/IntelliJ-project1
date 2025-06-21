@@ -4,7 +4,7 @@ import com.sun.net.httpserver.HttpServer;
 import controller.*;
 import util.DBUtil;
 import util.StaticFileHandler;
-
+import util.CORSWrapperHandler;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.io.IOException;
@@ -27,23 +27,20 @@ public class Main {
         }
 
         HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+        FileController fileController = new FileController();
 
-        server.createContext("/member" , new memberController());
-        server.createContext("/product", new productController());
-        server.createContext("/cart", new cartController());
-        server.createContext("/order", new orderController());
-        server.createContext("/order_detail", new orderController());
-        server.createContext("/user", new userController());
-        //server.createContext("/images", new StaticFileHandler("/opt/images"));
-        server.createContext("/images", new HttpHandler() {
+        server.createContext("/member" , new CORSWrapperHandler(new memberController()));
+        server.createContext("/product", new CORSWrapperHandler(new productController()));
+        server.createContext("/cart", new CORSWrapperHandler(new cartController()));
+        server.createContext("/order", new CORSWrapperHandler(new orderController()));
+        server.createContext("/order_detail", new CORSWrapperHandler(new orderController()));
+        server.createContext("/user", new CORSWrapperHandler(new userController()));
+        server.createContext("/api/upload", fileController::handleFileUpload);
+        server.createContext("/images", new CORSWrapperHandler(new HttpHandler() {
             @Override
             public void handle(HttpExchange exchange) throws IOException {
                 String relPath = exchange.getRequestURI().getPath().replaceFirst("/images/", "");
-                Path file = Paths.get("/opt/images").resolve(relPath).normalize();
-                if (!Files.exists(file)) {
-                    // fallback 回本地
-                    file = Paths.get("src/main/resources/images").resolve(relPath).normalize();
-                }
+                Path file = Paths.get("/app/images").resolve(relPath).normalize();
 
                 if (Files.exists(file) && !Files.isDirectory(file)) {
                     String mime = URLConnection.guessContentTypeFromName(file.toString());
@@ -58,7 +55,7 @@ public class Main {
                     exchange.sendResponseHeaders(404, -1);
                 }
             }
-        });
+        }));
 
         server.setExecutor(null);
         server.start();

@@ -13,6 +13,12 @@ WORKDIR /app
 # 從 builder 階段複製包含所有依賴的 Jar，並重新命名為 app.jar
 COPY --from=builder /build/target/Backend_side_project-1.0-SNAPSHOT-jar-with-dependencies.jar ./app.jar
 
+# 創建圖片存儲目錄
+RUN mkdir -p /app/images
+
+# 複製原有圖片到容器
+COPY src/main/resources/images/* /app/images/
+
 # 對外開放應用程式監聽的埠號（與 SERVER_PORT 一致）
 EXPOSE 8080
 

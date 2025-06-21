@@ -38,14 +38,25 @@ public class memberDAO {
     }
     public boolean insertMember(Member m) {
         String sql = "INSERT INTO member (name, password, phone, address, email) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, m.getName());
             stmt.setString(2, m.getPassword());
             stmt.setString(3, m.getPhone());
             stmt.setString(4, m.getAddress());
-            //stmt.setTimestamp(5, Timestamp.valueOf(m.getCreate_at()));
             stmt.setString(5, m.getEmail());
-            stmt.executeUpdate();
+            int affected = stmt.executeUpdate();
+            if (affected == 0) {
+                throw new SQLException("Creating member failed, no rows affected.");
+            }
+            // 取得自增的 member_id
+            try (ResultSet keys = stmt.getGeneratedKeys()) {
+                if (keys.next()) {
+                    int generatedId = keys.getInt(1);
+                    m.setMember_id(generatedId);
+                } else {
+                    throw new SQLException("Creating member failed, no ID obtained.");
+                }
+            }
             return true;
         } catch (Exception e) {
             System.err.println("=== 註冊會員時發生錯誤 ===");
@@ -121,5 +132,28 @@ public class memberDAO {
             ps.setInt(1, id);
             return ps.executeUpdate() > 0;
         }
+    }
+    //會員查詢自己資料方法
+    public Member findByid(int id) {
+        String sql = "SELECT * FROM member WHERE member_id = ?";
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            //stmt.setString(2, password);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                Member m = new Member();
+                m.setMember_id(rs.getInt("member_id"));
+                m.setName(rs.getString("name"));
+                m.setPassword(rs.getString("password"));
+                m.setPhone(rs.getString("phone"));
+                m.setAddress(rs.getString("address"));
+                m.setCreate_at(rs.getTimestamp("create_at").toLocalDateTime());
+                m.setEmail(rs.getString("email"));
+                return m;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

@@ -9,7 +9,7 @@ public class user {
 
     // 构造函数
 
-
+    public user() {}
     public user(int userId, String name, String password, String account, int level) {
         this.userId = userId;
         this.name = name;

@@ -59,46 +59,76 @@ public class orderController implements HttpHandler {
     }
 
     private void handleCreate(HttpExchange ex) throws IOException {
+        JsonObject response = new JsonObject();
+        int statusCode;
+        
         try (InputStreamReader reader = new InputStreamReader(ex.getRequestBody(), StandardCharsets.UTF_8)) {
             JsonObject json = gson.fromJson(reader, JsonObject.class);
             if (json == null || !json.has("member_id") || json.get("member_id").isJsonNull()) {
-                sendJson(ex, 400, "{\"error\":\"member_id required\"}");
-                return;
-            }
-            int memberId = json.get("member_id").getAsInt();
-            // --- 新增：先把這個會員的購物車內容撈出來 ---
-            List<cart> carts = cartDAO.getCartByMemberId(memberId);
-            if (carts.isEmpty()) {
-                sendJson(ex, 400, "{\"error\":\"購物車為空\"}");
-                return;
-            }
-            for (cart c : carts) {
-                // 取得完整商品資料
-                product p = productDAO.getProductById(c.getProduct_id());
-
-                // 檢查是否下架
-                if (!p.isIs_active()) {
-                    String err = String.format("{\"error\":\"商品 %d 已下架\"}", p.getProduct_id());
-                    sendJson(ex, 400, err);
-                    return;
+                statusCode = 400;
+                response.addProperty("status", statusCode);
+                response.addProperty("message", "member_id 為必要參數");
+                response.add("data", null);
+            } else {
+                int memberId = json.get("member_id").getAsInt();
+                // --- 先把這個會員的購物車內容撈出來 ---
+                List<cart> carts = cartDAO.getCartByMemberId(memberId);
+                if (carts.isEmpty()) {
+                    statusCode = 400;
+                    response.addProperty("status", statusCode);
+                    response.addProperty("message", "購物車為空");
+                    response.add("data", null);
+                } else {
+                    // 檢查購物車商品狀態
+                    boolean validationFailed = false;
+                    String errorMsg = "";
+                    
+                    for (cart c : carts) {
+                        product p = productDAO.getProductById(c.getProduct_id());
+                        if (!p.isIs_active()) {
+                            validationFailed = true;
+                            errorMsg = String.format("商品 %d 已下架", p.getProduct_id());
+                            break;
+                        }
+                        if (c.getQuantity() > p.getSoh()) {
+                            validationFailed = true;
+                            errorMsg = String.format("商品 %d 庫存不足", p.getProduct_id());
+                            break;
+                        }
+                    }
+                    
+                    if (validationFailed) {
+                        statusCode = 400;
+                        response.addProperty("status", statusCode);
+                        response.addProperty("message", errorMsg);
+                        response.add("data", null);
+                    } else {
+                        // 全部檢查通過，建立訂單
+                        int newId = orderDAO.placeOrderFromCart(memberId);
+                        statusCode = 201;
+                        response.addProperty("status", statusCode);
+                        response.addProperty("message", "訂單建立成功");
+                        JsonObject orderData = new JsonObject();
+                        orderData.addProperty("order_id", newId);
+                        response.add("data", orderData);
+                    }
                 }
-                // 檢查庫存是否足夠
-                if (c.getQuantity() > p.getSoh()) {
-                    String err = String.format("{\"error\":\"商品 %d 庫存不足\"}", p.getProduct_id());
-                    sendJson(ex, 400, err);
-                    return;
-                }
             }
-
-            // --- 全部檢查通過，才真正去建立訂單 ---
-            int newId = orderDAO.placeOrderFromCart(memberId);
-            sendJson(ex, 201, "{\"order_id\":" + newId + "}");
         } catch (JsonSyntaxException e) {
-            sendJson(ex, 400, "{\"error\":\"invalid JSON\"}");
+            statusCode = 400;
+            response.addProperty("status", statusCode);
+            response.addProperty("message", "JSON 格式錯誤");
+            response.add("data", null);
         } catch (Exception e) {
             e.printStackTrace();
-            sendJson(ex, 500, "{\"error\":\"create failed\"}");
+            statusCode = 500;
+            response.addProperty("status", statusCode);
+            response.addProperty("message", "建立訂單失敗: " + e.getMessage());
+            response.add("data", null);
         }
+        
+        String jsonResponse = gson.toJson(response);
+        sendJson(ex, statusCode, jsonResponse);
     }
 
     private void handleQuery(HttpExchange ex) throws IOException {

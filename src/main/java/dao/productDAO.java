@@ -36,21 +36,31 @@ public class productDAO {
         return products;
     }
 
-    public static void insertProduct(product p) throws Exception {
+    public static boolean insertProduct(product p) throws Exception {
         String sql = "INSERT INTO product (name, price, soh, category_id, is_active, image_url) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
             ps.setString(1, p.getName());
             ps.setBigDecimal(2, p.getPrice());
             ps.setInt(3, p.getSoh());
             ps.setInt(4, p.getCategory_id());
             ps.setBoolean(5, true);
             ps.setString(6, p.getImage_url());
-            ps.executeUpdate();
+            int affected = ps.executeUpdate();
+            if (affected > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        p.setProduct_id(rs.getInt(1));
+                    }
+                }
+                p.setIs_active(true);
+                return true;
+            }
         }
+        return false;
     }
 
-    public static void updateProduct(product p) throws Exception {
+    public static boolean updateProduct(product p) throws Exception {
         String sql = "UPDATE product SET name = ?, price = ?, soh = ?, category_id = ?, is_active = ? , image_url = ? WHERE product_id = ?";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -61,17 +71,18 @@ public class productDAO {
             ps.setBoolean(5, p.isIs_active());
             ps.setString(6, p.getImage_url());
             ps.setInt(7, p.getProduct_id());
-
-            ps.executeUpdate();
+            int affected = ps.executeUpdate();
+            return affected > 0;
         }
     }
 
-    public static void deleteProduct(int product_id) throws Exception {
+    public static boolean deleteProduct(int product_id) throws Exception {
         String sql = "DELETE FROM product WHERE product_id = ?";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, product_id);
-            ps.executeUpdate();
+            int affected = ps.executeUpdate();
+            return affected > 0;
         }
     }
     public static void deactivateOutOfStockProducts() throws Exception {
