@@ -49,7 +49,7 @@ public class cartDAO {
                             insertStmt.setInt(1, cartItem.getMember_id());
                             insertStmt.setInt(2, cartItem.getProduct_id());
                             insertStmt.setInt(3, cartItem.getQuantity());
-                            insertStmt.setTimestamp(4, Timestamp.valueOf(cartItem.getCreate_at()));
+                            //insertStmt.setTimestamp(4, Timestamp.valueOf(cartItem.getCreate_at()));
                             insertStmt.executeUpdate();
                             return "加入購物車成功";
                         }

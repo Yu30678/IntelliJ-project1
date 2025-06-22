@@ -10,7 +10,7 @@ public class CORSWrapperHandler implements HttpHandler {
     private final String allowOrigin;
 
     public CORSWrapperHandler(HttpHandler wrapped) {
-        this(wrapped, "http://localhost:3000");
+        this(wrapped, "*");
     }
 
     public CORSWrapperHandler(HttpHandler wrapped, String allowOrigin) {
@@ -21,10 +21,11 @@ public class CORSWrapperHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         Headers headers = exchange.getResponseHeaders();
-        headers.add("Access-Control-Allow-Origin", "allowOrigin");
+        headers.add("Access-Control-Allow-Origin", allowOrigin);
         headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+        headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With,Accept");
         headers.add("Access-Control-Max-Age", "3600");
+        headers.add("Access-Control-Allow-Credentials", "true");
 
 
         if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
