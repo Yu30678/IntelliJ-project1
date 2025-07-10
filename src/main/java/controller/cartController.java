@@ -78,24 +78,45 @@ public class cartController implements HttpHandler {
     private void handleGet(HttpExchange exchange) throws Exception {
         JsonObject wrapper = new JsonObject();
         int statusCode;
-        
-        try (InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8)) {
-            JsonObject req = gson.fromJson(reader, JsonObject.class);
-            
-            if (req == null || !req.has("member_id")) {
+
+        try {
+            String query = exchange.getRequestURI().getQuery();
+
+            if (query == null || !query.contains("member_id=")) {
                 statusCode = 400;
                 wrapper.addProperty("status", statusCode);
                 wrapper.addProperty("message", "缺少 member_id 參數");
                 wrapper.add("data", JsonNull.INSTANCE);
             } else {
-                int memberId = req.get("member_id").getAsInt();
-                List<cart> carts = dao.getCartByMemberId(memberId);
-                
-                statusCode = 200;
-                wrapper.addProperty("status", statusCode);
-                wrapper.addProperty("message", "查詢成功");
-                wrapper.add("data", gson.toJsonTree(carts));
+                String[] queryParams = query.split("&");
+                int memberId = -1;
+
+                for (String param : queryParams) {
+                    if (param.startsWith("member_id=")) {
+                        memberId = Integer.parseInt(param.split("=")[1]);
+                        break;
+                    }
+                }
+
+                if (memberId == -1) {
+                    statusCode = 400;
+                    wrapper.addProperty("status", statusCode);
+                    wrapper.addProperty("message", "member_id 參數格式錯誤");
+                    wrapper.add("data", JsonNull.INSTANCE);
+                } else {
+                    List<cart> carts = dao.getCartByMemberId(memberId);
+
+                    statusCode = 200;
+                    wrapper.addProperty("status", statusCode);
+                    wrapper.addProperty("message", "查詢成功");
+                    wrapper.add("data", gson.toJsonTree(carts));
+                }
             }
+        } catch (NumberFormatException e) {
+            statusCode = 400;
+            wrapper.addProperty("status", statusCode);
+            wrapper.addProperty("message", "member_id 必須是數字");
+            wrapper.add("data", JsonNull.INSTANCE);
         } catch (Exception e) {
             e.printStackTrace();
             statusCode = 500;
@@ -103,7 +124,7 @@ public class cartController implements HttpHandler {
             wrapper.addProperty("message", "伺服器錯誤：" + e.getMessage());
             wrapper.add("data", JsonNull.INSTANCE);
         }
-        
+
         String response = gson.toJson(wrapper);
         byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set("Content-Type", "application/json");

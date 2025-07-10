@@ -17,7 +17,7 @@ public class productDAO {
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(
                      "SELECT p.product_id, p.name, p.price, p.soh, p.category_id, c.name AS category_name, p.image_url, p.is_active " +
-                             "FROM product p JOIN category c ON p.category_id = c.category_id WHERE p.is_active = 1")) {
+                             "FROM product p JOIN category c ON p.category_id = c.category_id ")) {
 
             while (rs.next()) {
                 product p = new product();

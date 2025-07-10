@@ -1,17 +1,10 @@
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import controller.*;
 import util.DBUtil;
 import util.StaticFileHandler;
 import util.CORSWrapperHandler;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.io.IOException;
-import java.net.URLConnection;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class Main {
     public static void main (String[] args) throws IOException {
@@ -36,26 +29,12 @@ public class Main {
         server.createContext("/order_detail", new CORSWrapperHandler(new orderController()));
         server.createContext("/user", new CORSWrapperHandler(new userController()));
         server.createContext("/api/upload", fileController::handleFileUpload);
-        server.createContext("/images", new CORSWrapperHandler(new HttpHandler() {
-            @Override
-            public void handle(HttpExchange exchange) throws IOException {
-                String relPath = exchange.getRequestURI().getPath().replaceFirst("/images/", "");
-                Path file = Paths.get("/app/images").resolve(relPath).normalize();
-
-                if (Files.exists(file) && !Files.isDirectory(file)) {
-                    String mime = URLConnection.guessContentTypeFromName(file.toString());
-                    if (mime == null) mime = "application/octet-stream";
-                    exchange.getResponseHeaders().set("Content-Type", mime);
-                    byte[] data = Files.readAllBytes(file);
-                    exchange.sendResponseHeaders(200, data.length);
-                    try (OutputStream os = exchange.getResponseBody()) {
-                        os.write(data);
-                    }
-                } else {
-                    exchange.sendResponseHeaders(404, -1);
-                }
-            }
-        }));
+        // 使用絕對路徑指向 images 目錄
+        String imagesPath = System.getProperty("user.dir") + "/src/main/resources/images";
+        System.out.println("🖼️ 圖片服務路徑: " + imagesPath);
+        server.createContext("/images", new CORSWrapperHandler(
+            new StaticFileHandler(imagesPath)
+        ));
 
         server.setExecutor(null);
         server.start();

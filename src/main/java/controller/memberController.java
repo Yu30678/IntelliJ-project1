@@ -134,31 +134,53 @@ public class memberController implements HttpHandler {
         int statusCode;
         JsonObject wrapper = new JsonObject();
 
-        try (InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8)) {
-            JsonObject reqJson = gson.fromJson(reader, JsonObject.class);
-            if (reqJson == null || !reqJson.has("member_id")) {
+        try {
+            String query = exchange.getRequestURI().getQuery();
+            if (query == null || !query.contains("member_id=")) {
                 statusCode = 400;
                 wrapper.addProperty("status", statusCode);
-                wrapper.addProperty("message", "member_id 欄位為必要");
+                wrapper.addProperty("message", "member_id 參數為必要");
                 wrapper.add("data", JsonNull.INSTANCE);
             } else {
-                int id = reqJson.get("member_id").getAsInt();
-                memberDAO dao = new memberDAO();
-                Member m = dao.findByid(id);
+                String[] params = query.split("&");
+                String memberIdStr = null;
+                for (String param : params) {
+                    if (param.startsWith("member_id=")) {
+                        memberIdStr = param.substring("member_id=".length());
+                        break;
+                    }
+                }
 
-                if (m == null) {
-                    statusCode = 404;
+                if (memberIdStr == null) {
+                    statusCode = 400;
                     wrapper.addProperty("status", statusCode);
-                    wrapper.addProperty("message", "找不到 member_id=" + id);
+                    wrapper.addProperty("message", "member_id 參數為必要");
                     wrapper.add("data", JsonNull.INSTANCE);
                 } else {
-                    // 不回傳密碼
-                    statusCode = 200;
-                    wrapper.addProperty("status", statusCode);
-                    wrapper.addProperty("message", "查詢成功");
-                    wrapper.add("data", gson.toJsonTree(m));
+                    int id = Integer.parseInt(memberIdStr);
+                    memberDAO dao = new memberDAO();
+                    Member m = dao.findByid(id);
+
+                    if (m == null) {
+                        statusCode = 404;
+                        wrapper.addProperty("status", statusCode);
+                        wrapper.addProperty("message", "找不到 member_id=" + id);
+                        wrapper.add("data", JsonNull.INSTANCE);
+                    } else {
+                        // 不回傳密碼
+                        m.setPassword(null);
+                        statusCode = 200;
+                        wrapper.addProperty("status", statusCode);
+                        wrapper.addProperty("message", "查詢成功");
+                        wrapper.add("data", gson.toJsonTree(m));
+                    }
                 }
             }
+        } catch (NumberFormatException e) {
+            statusCode = 400;
+            wrapper.addProperty("status", statusCode);
+            wrapper.addProperty("message", "member_id 必須是數字");
+            wrapper.add("data", JsonNull.INSTANCE);
         } catch (Exception e) {
             statusCode = 500;
             wrapper.addProperty("status", statusCode);

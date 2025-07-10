@@ -211,7 +211,11 @@ public class userController implements HttpHandler {
         switch (method) {
             case "GET": {
                 String query = ex.getRequestURI().getQuery();
-                if (query != null && query.startsWith("member_id=")) {
+                if (query != null && query.startsWith("order_id=")) {
+                    int orderId = Integer.parseInt(query.split("=")[1]);
+                    List<order_detail> details = oDao.getOrderDetailsByOrderId(orderId);
+                    sendJson(ex, 200, makeResp(200, "查詢訂單詳情成功", details));
+                } else if (query != null && query.startsWith("member_id=")) {
                     int id = Integer.parseInt(query.split("=")[1]);
                     List<order> m = oDao.getOrdersByMemberId(id);
                     sendJson(ex, 200, makeResp(200, "查詢成功", m));

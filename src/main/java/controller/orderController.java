@@ -134,25 +134,39 @@ public class orderController implements HttpHandler {
     private void handleQuery(HttpExchange ex) throws IOException {
         String q = ex.getRequestURI().getQuery();
         try {
-            List<order> list = (q != null && q.startsWith("member_id="))
-                    ? orderDAO.getOrdersByMemberId(Integer.parseInt(q.split("=")[1]))
-                    : orderDAO.getAllOrders();
+            if (q != null && q.startsWith("member_id=")) {
+                int memberId = Integer.parseInt(q.split("=")[1]);
+                List<order> orderList = orderDAO.getOrdersByMemberId(memberId);
 
-            sendJson(ex, 200, gson.toJson(list));
+                // 為每個訂單取得詳細資料
+                JsonObject response = new JsonObject();
+                response.addProperty("status", 200);
+                response.addProperty("message", "查詢成功");
+
+                JsonObject data = new JsonObject();
+                data.add("orders", gson.toJsonTree(orderList));
+
+                // 如果有訂單，也取得所有訂單的詳細資料
+                if (!orderList.isEmpty()) {
+                    JsonObject allDetails = new JsonObject();
+                    for (order o : orderList) {
+                        List<order_detail> details = orderDAO.getOrderDetailsByOrderId(o.getOrder_id());
+                        allDetails.add("order_" + o.getOrder_id(), gson.toJsonTree(details));
+                    }
+                    data.add("order_details", allDetails);
+                }
+
+                response.add("data", data);
+                sendJson(ex, 200, gson.toJson(response));
+            } else {
+                sendJson(ex, 400, "{\"error\":\"member_id parameter required\"}");
+            }
+        } catch (NumberFormatException e) {
+            sendJson(ex, 400, "{\"error\":\"Invalid member_id format\"}");
         } catch (Exception e) {
             e.printStackTrace();
             sendJson(ex, 500, "{\"error\":\"load failed\"}");
         }
-        try {
-            int orderId = 0;
-            List<order_detail> details = orderDAO.getOrderDetailsByOrderId(orderId);
-            String json = gson.toJson(details);
-            sendJson(ex, 200, json);
-        } catch (Exception e) {
-            e.printStackTrace();
-            sendJson(ex, 500, "{\"error\":\"load failed\"}");
-        }
-        return;
     }
 
     private void handleUpdate(HttpExchange ex) throws IOException {

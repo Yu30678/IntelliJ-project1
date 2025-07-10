@@ -96,7 +96,7 @@ public class memberDAO {
         return null;
     }
     public Member getMemberById(int id) throws Exception {
-        String sql = "SELECT member_id, name, phone, address, create_at, email FROM member WHERE member_id = ?";
+        String sql = "SELECT member_id, name, phone, password, address, create_at, email FROM member WHERE member_id = ?";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -105,6 +105,7 @@ public class memberDAO {
                     m.setMember_id(rs.getInt("member_id"));
                     m.setName(rs.getString("name"));
                     m.setPhone(rs.getString("phone"));
+                    m.setPassword(rs.getString("password"));
                     m.setAddress(rs.getString("address"));
                     m.setCreate_at(rs.getTimestamp("create_at").toLocalDateTime());
                     m.setEmail(rs.getString("email"));
