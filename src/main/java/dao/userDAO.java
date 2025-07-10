@@ -1,4 +1,5 @@
 package dao;
+import model.Member;
 import model.user;
 import util.DBUtil;
 
@@ -7,7 +8,30 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class userDAO {// 1) 註冊
+public class userDAO {
+    public List<user> getUsers()throws Exception {
+        List<user> list = new ArrayList<>();
+        Connection conn = DBUtil.getConnection();
+        System.out.println("✅ 資料庫連線成功？ conn = " + conn);
+        String sql = "SELECT * FROM user";
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+            user u = new user();
+            u.setUserId(rs.getInt("user_id"));
+            u.setName(rs.getString("name"));
+            u.setPassword(rs.getString("password"));
+            u.setAccount(rs.getString("account"));
+            u.setLevel(Integer.parseInt(rs.getString("level")));
+            list.add(u);
+        }
+        rs.close();
+        ps.close();
+        conn.close();
+
+        return list;
+    }
+    // 1) 註冊
     public static user insertUser(user u) throws Exception {
         String sql = "INSERT INTO user (name, password, account, level) VALUES (?, ?, ?, ?)";
         try (Connection conn = DBUtil.getConnection();

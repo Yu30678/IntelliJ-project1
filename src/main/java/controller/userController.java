@@ -263,6 +263,11 @@ public class userController implements HttpHandler {
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
         String path = ex.getRequestURI().getPath();
         switch (method) {
+            case "GET": {
+                List<user> userList = uDao.getUsers();
+                sendJson(ex, 200, makeResp(200, "查詢成功", userList));
+                break;
+            }
             case "POST": {
 
 
