@@ -217,11 +217,109 @@ public class userController implements HttpHandler {
                     sendJson(ex, 200, makeResp(200, "查詢訂單詳情成功", details));
                 } else if (query != null && query.startsWith("member_id=")) {
                     int id = Integer.parseInt(query.split("=")[1]);
-                    List<order> m = oDao.getOrdersByMemberId(id);
-                    sendJson(ex, 200, makeResp(200, "查詢成功", m));
+                    List<order> orderList = oDao.getOrdersByMemberId(id);
+                    
+                    // 取得會員資訊（只需要查一次）
+                    Member member = mDao.getMemberById(id);
+                    String memberName = member != null ? member.getName() : "未知會員";
+                    
+                    // 建立整合的訂單資料陣列
+                    com.google.gson.JsonArray ordersArray = new com.google.gson.JsonArray();
+                    
+                    for (order o : orderList) {
+                        JsonObject orderObj = new JsonObject();
+                        orderObj.addProperty("order_id", o.getOrder_id());
+                        orderObj.addProperty("member_id", o.getMember_id());
+                        orderObj.addProperty("member_name", memberName);
+                        orderObj.add("create_at", gson.toJsonTree(o.getCreate_at()));
+                        
+                        // 取得訂單明細
+                        List<order_detail> details = oDao.getOrderDetailsByOrderId(o.getOrder_id());
+                        com.google.gson.JsonArray itemsArray = new com.google.gson.JsonArray();
+                        java.math.BigDecimal totalAmount = java.math.BigDecimal.ZERO;
+                        
+                        for (order_detail detail : details) {
+                            // 取得產品資訊
+                            product p = pDao.getProductById(detail.getProduct_id());
+                            
+                            JsonObject itemObj = new JsonObject();
+                            itemObj.addProperty("product_id", detail.getProduct_id());
+                            itemObj.addProperty("product_name", p != null ? p.getName() : "未知商品");
+                            itemObj.addProperty("product_image_url", p != null ? p.getImage_url() : "");
+                            itemObj.addProperty("unit_price", detail.getPrice());
+                            itemObj.addProperty("quantity", detail.getQuantity());
+                            
+                            // 計算小計
+                            java.math.BigDecimal subtotal = detail.getPrice().multiply(java.math.BigDecimal.valueOf(detail.getQuantity()));
+                            itemObj.addProperty("subtotal", subtotal);
+                            totalAmount = totalAmount.add(subtotal);
+                            
+                            itemsArray.add(itemObj);
+                        }
+                        
+                        orderObj.addProperty("total_amount", totalAmount);
+                        orderObj.add("items", itemsArray);
+                        ordersArray.add(orderObj);
+                    }
+                    
+                    JsonObject response = new JsonObject();
+                    response.addProperty("status", 200);
+                    response.addProperty("message", "查詢成功");
+                    response.add("data", ordersArray);
+                    
+                    sendJson(ex, 200, response);
                 } else {
-                    List<order> list = oDao.getAllOrders();
-                    sendJson(ex, 200, makeResp(200, "查詢成功", list));
+                    // 查詢所有訂單，包含詳細資料
+                    List<order> orderList = oDao.getAllOrders();
+                    
+                    // 建立整合的訂單資料陣列
+                    com.google.gson.JsonArray ordersArray = new com.google.gson.JsonArray();
+                    
+                    for (order o : orderList) {
+                        JsonObject orderObj = new JsonObject();
+                        orderObj.addProperty("order_id", o.getOrder_id());
+                        orderObj.addProperty("member_id", o.getMember_id());
+                        orderObj.add("create_at", gson.toJsonTree(o.getCreate_at()));
+                        
+                        // 取得會員資訊
+                        Member member = mDao.getMemberById(o.getMember_id());
+                        orderObj.addProperty("member_name", member != null ? member.getName() : "未知會員");
+                        
+                        // 取得訂單明細
+                        List<order_detail> details = oDao.getOrderDetailsByOrderId(o.getOrder_id());
+                        com.google.gson.JsonArray itemsArray = new com.google.gson.JsonArray();
+                        java.math.BigDecimal totalAmount = java.math.BigDecimal.ZERO;
+                        
+                        for (order_detail detail : details) {
+                            // 取得產品資訊
+                            product p = pDao.getProductById(detail.getProduct_id());
+                            
+                            JsonObject itemObj = new JsonObject();
+                            itemObj.addProperty("product_id", detail.getProduct_id());
+                            itemObj.addProperty("product_name", p != null ? p.getName() : "未知商品");
+                            itemObj.addProperty("product_image_url", p != null ? p.getImage_url() : "");
+                            itemObj.addProperty("unit_price", detail.getPrice());
+                            itemObj.addProperty("quantity", detail.getQuantity());
+                            
+                            // 計算小計
+                            java.math.BigDecimal subtotal = detail.getPrice().multiply(java.math.BigDecimal.valueOf(detail.getQuantity()));
+                            itemObj.addProperty("subtotal", subtotal);
+                            totalAmount = totalAmount.add(subtotal);
+                            
+                            itemsArray.add(itemObj);
+                        }
+                        
+                        orderObj.addProperty("total_amount", totalAmount);
+                        orderObj.add("items", itemsArray);
+                        ordersArray.add(orderObj);
+                    }
+                    
+                    JsonObject response = new JsonObject();
+                    response.addProperty("status", 200);
+                    response.addProperty("message", "查詢成功");
+                    response.add("data", ordersArray);
+                    
+                    sendJson(ex, 200, response);
                 }
                 break;
             }

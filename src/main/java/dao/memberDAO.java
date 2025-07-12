@@ -157,4 +157,29 @@ public class memberDAO {
         }
         return null;
     }
+
+    // 專門用來更新密碼的方法
+    public boolean updatePassword(int memberId, String newPassword) throws Exception {
+        String sql = "UPDATE member SET password = ? WHERE member_id = ?";
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, newPassword);
+            ps.setInt(2, memberId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    // 驗證會員舊密碼是否正確的方法
+    public boolean verifyPassword(int memberId, String password) throws Exception {
+        String sql = "SELECT password FROM member WHERE member_id = ?";
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, memberId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String storedPassword = rs.getString("password");
+                    return password.equals(storedPassword);
+                }
+            }
+        }
+        return false;
+    }
 }

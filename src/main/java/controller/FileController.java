@@ -16,13 +16,13 @@ import java.util.UUID;
 /**
  * 文件上傳控制器 - 專門用於商品圖片上傳
  * 支援 form-data 和 binary 兩種上傳方式
- * 儲存路徑：src/main/resources/images
+ * 儲存路徑：/app/images (Docker容器內)
  */
 public class FileController {
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     
-    // 圖片儲存路徑 - 使用絕對路徑指向專案的 resources/images 目錄
-    private static final String IMAGE_STORAGE_PATH = System.getProperty("user.dir") + "/src/main/resources/images";
+    // 圖片儲存路徑 - Docker環境下使用容器內的images目錄
+    private static final String IMAGE_STORAGE_PATH = "/app/images";
     
     // 支援的圖片格式
     private static final String[] ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif"};
@@ -63,7 +63,7 @@ public class FileController {
                 JsonObject fileData = new JsonObject();
                 fileData.addProperty("fileName", fileName);
                 fileData.addProperty("filePath", "/images/" + fileName);
-                fileData.addProperty("fullUrl", "http://localhost:8080/images/" + fileName);
+                fileData.addProperty("fullUrl", "http://localhost:8081/images/" + fileName);
                 response.add("data", fileData);
             }
         } catch (Exception e) {

@@ -1,6 +1,7 @@
 package dao;
 
 import model.cart;
+import model.CartWithProduct;
 import util.DBUtil;
 
 import java.sql.*;
@@ -107,5 +108,37 @@ public class cartDAO {
                 throw new IllegalArgumentException("購物車中找不到 member_id=" + memberId + ", product_id=" + productId);
             }
         }
+    }
+
+    // 查看購物車包含產品資訊
+    public static List<CartWithProduct> getCartWithProductByMemberId(int memberId) {
+        List<CartWithProduct> list = new ArrayList<>();
+        String sql = """
+            SELECT c.member_id, c.product_id, c.quantity, c.create_at,
+                   p.name AS product_name, p.price AS product_price, p.image_url
+            FROM cart c
+            JOIN product p ON c.product_id = p.product_id
+            WHERE c.member_id = ?
+            ORDER BY c.create_at DESC
+            """;
+        
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, memberId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                CartWithProduct cwp = new CartWithProduct();
+                cwp.setMember_id(rs.getInt("member_id"));
+                cwp.setProduct_id(rs.getInt("product_id"));
+                cwp.setQuantity(rs.getInt("quantity"));
+                cwp.setCreate_at(rs.getTimestamp("create_at").toLocalDateTime());
+                cwp.setProduct_name(rs.getString("product_name"));
+                cwp.setProduct_price(rs.getBigDecimal("product_price"));
+                cwp.setImage_url(rs.getString("image_url"));
+                list.add(cwp);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

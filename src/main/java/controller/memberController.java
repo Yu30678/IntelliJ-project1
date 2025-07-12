@@ -33,6 +33,8 @@ public class memberController implements HttpHandler {
             handleDelete(exchange);
         }else if ("/member".equals(path) && "PUT".equalsIgnoreCase(method)) {
             handleChange(exchange);
+        } else if ("/member/password".equals(path) && "PUT".equalsIgnoreCase(method)) {
+            handlePasswordChange(exchange);
         } else {
             exchange.sendResponseHeaders(404, -1);
         }
@@ -266,6 +268,74 @@ public class memberController implements HttpHandler {
                     wrapper.addProperty("status", statusCode);
                     wrapper.addProperty("message", "找不到要修改的會員或修改失敗");
                     wrapper.add("data", JsonNull.INSTANCE);
+                }
+            }
+        } catch (Exception e) {
+            statusCode = 500;
+            wrapper.addProperty("status", statusCode);
+            wrapper.addProperty("message", "伺服器錯誤：" + e.getMessage());
+            wrapper.add("data", JsonNull.INSTANCE);
+        }
+
+        String response = gson.toJson(wrapper);
+        byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
+        exchange.sendResponseHeaders(statusCode, bytes.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(bytes);
+        }
+        exchange.close();
+    }
+    private void handlePasswordChange(HttpExchange exchange) throws IOException {
+        JsonObject wrapper = new JsonObject();
+        int statusCode;
+
+        try (InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8)) {
+            JsonObject req = gson.fromJson(reader, JsonObject.class);
+            
+            // 檢查必要的欄位
+            if (req == null || !req.has("member_id") || !req.has("old_password") || !req.has("new_password")) {
+                statusCode = 400;
+                wrapper.addProperty("status", statusCode);
+                wrapper.addProperty("message", "member_id, old_password, new_password 欄位都是必要的");
+                wrapper.add("data", JsonNull.INSTANCE);
+            } else {
+                int memberId = req.get("member_id").getAsInt();
+                String oldPassword = req.get("old_password").getAsString();
+                String newPassword = req.get("new_password").getAsString();
+                
+                // 檢查新密碼不能為空
+                if (newPassword == null || newPassword.trim().isEmpty()) {
+                    statusCode = 400;
+                    wrapper.addProperty("status", statusCode);
+                    wrapper.addProperty("message", "新密碼不能為空");
+                    wrapper.add("data", JsonNull.INSTANCE);
+                } else {
+                    memberDAO dao = new memberDAO();
+                    
+                    // 先驗證舊密碼是否正確
+                    boolean isOldPasswordValid = dao.verifyPassword(memberId, oldPassword);
+                    
+                    if (!isOldPasswordValid) {
+                        statusCode = 401;
+                        wrapper.addProperty("status", statusCode);
+                        wrapper.addProperty("message", "舊密碼錯誤");
+                        wrapper.add("data", JsonNull.INSTANCE);
+                    } else {
+                        // 舊密碼正確，更新新密碼
+                        boolean updated = dao.updatePassword(memberId, newPassword);
+                        
+                        if (updated) {
+                            statusCode = 200;
+                            wrapper.addProperty("status", statusCode);
+                            wrapper.addProperty("message", "密碼修改成功");
+                            wrapper.add("data", JsonNull.INSTANCE);
+                        } else {
+                            statusCode = 404;
+                            wrapper.addProperty("status", statusCode);
+                            wrapper.addProperty("message", "找不到要修改的會員或修改失敗");
+                            wrapper.add("data", JsonNull.INSTANCE);
+                        }
+                    }
                 }
             }
         } catch (Exception e) {

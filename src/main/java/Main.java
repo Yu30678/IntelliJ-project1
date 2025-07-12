@@ -29,8 +29,8 @@ public class Main {
         server.createContext("/order_detail", new CORSWrapperHandler(new orderController()));
         server.createContext("/user", new CORSWrapperHandler(new userController()));
         server.createContext("/api/upload", fileController::handleFileUpload);
-        // 使用絕對路徑指向 images 目錄
-        String imagesPath = System.getProperty("user.dir") + "/src/main/resources/images";
+        // Docker環境下使用容器內的images目錄
+        String imagesPath = "/app/images";
         System.out.println("🖼️ 圖片服務路徑: " + imagesPath);
         server.createContext("/images", new CORSWrapperHandler(
             new StaticFileHandler(imagesPath)

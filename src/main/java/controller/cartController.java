@@ -8,6 +8,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import dao.cartDAO;
 import model.cart;
+import model.CartWithProduct;
 import java.time.LocalDateTime;
 import util.LocalDateTimeAdapter;
 import java.io.InputStreamReader;
@@ -104,7 +105,7 @@ public class cartController implements HttpHandler {
                     wrapper.addProperty("message", "member_id 參數格式錯誤");
                     wrapper.add("data", JsonNull.INSTANCE);
                 } else {
-                    List<cart> carts = dao.getCartByMemberId(memberId);
+                    List<CartWithProduct> carts = cartDAO.getCartWithProductByMemberId(memberId);
 
                     statusCode = 200;
                     wrapper.addProperty("status", statusCode);
