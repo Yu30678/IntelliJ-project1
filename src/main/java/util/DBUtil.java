@@ -28,6 +28,13 @@ public class DBUtil {
 
 
     public static Connection getConnection() throws SQLException {
+        System.out.println("Environment Variables:");
+        System.out.println("MYSQLHOST=" + System.getenv("MYSQLHOST"));
+        System.out.println("MYSQLPORT=" + System.getenv("MYSQLPORT"));
+        System.out.println("MYSQLDATABASE=" + System.getenv("MYSQLDATABASE"));
+        System.out.println("MYSQLUSER=" + System.getenv("MYSQLUSER"));
+        System.out.println("Resolved Values:");
+        System.out.println("HOST=" + HOST + ", PORT=" + PORT + ", DATABASE=" + DATABASE);
         System.out.println("Connecting to DB → URL=" + URL + ", USER=" + USER);
         if (USER == null || PASS == null) {
             throw new IllegalStateException("Missing MYSQL environment variables");
