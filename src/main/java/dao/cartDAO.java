@@ -67,7 +67,7 @@ public class cartDAO {
         List<cart> list = new ArrayList<>();
         String sql = "SELECT * FROM cart ";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            //stmt.setInt(1, memberId);
+            stmt.setInt(1, memberId);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 cart c = new cart();
