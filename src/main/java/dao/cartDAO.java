@@ -63,7 +63,7 @@ public class cartDAO {
     }
 
     // 查看購物車
-    public static List<cart> getCartByMemberId(int memberId) {
+    public List<cart> getCartByMemberId(int memberId) {
         List<cart> list = new ArrayList<>();
         String sql = "SELECT * FROM cart WHERE member_id = ?";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -95,7 +95,7 @@ public class cartDAO {
             return false;
         }
     }
-    public static void updateQuantity(int memberId, int productId, int quantity) throws Exception {
+    public void updateQuantity(int memberId, int productId, int quantity) throws Exception {
         String sql = "UPDATE cart SET quantity = ? WHERE member_id = ? AND product_id = ?";
         try ( Connection conn = DBUtil.getConnection();
               PreparedStatement ps = conn.prepareStatement(sql) ) {

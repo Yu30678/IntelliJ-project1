@@ -187,7 +187,7 @@ public class cartController implements HttpHandler {
                 wrapper.add("data", JsonNull.INSTANCE);
             } else {
                 try {
-                    cartDAO.updateQuantity(req.getMember_id(), req.getProduct_id(), req.getQuantity());
+                    dao.updateQuantity(req.getMember_id(), req.getProduct_id(), req.getQuantity());
                     statusCode = 200;
                     wrapper.addProperty("status", statusCode);
                     wrapper.addProperty("message", "數量更新成功");

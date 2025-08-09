@@ -24,6 +24,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class orderController implements HttpHandler {
+    private final cartDAO cartDAO = new cartDAO();
+    private final productDAO productDAO = new productDAO();
+    private final orderDAO orderDAO = new orderDAO();
     public orderController() {
         System.out.println("✅ orderController created and registered");
     }

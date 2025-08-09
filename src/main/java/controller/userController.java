@@ -27,6 +27,7 @@ public class userController implements HttpHandler {
     private final orderDAO oDao = new orderDAO();
     private final productDAO pDao = new productDAO();
     private final userDAO uDao = new userDAO();
+    private final cartDAO cartDAO = new cartDAO();
 
     @Override
     public void handle(HttpExchange ex) throws IOException {
@@ -317,20 +318,27 @@ public class userController implements HttpHandler {
     }
     private void handleCarts(HttpExchange ex, String method) throws Exception {
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
-        cartDAO cDao = new cartDAO();
+        //cartDAO cDao = new cartDAO();
         
         switch (method) {
             case "GET": {
                 // 查詢購物車
-                Map<String, Object> req = fromJson(ex, Map.class);
-                Number memberIdNum = (Number) req.get("member_id");
-                if (memberIdNum == null) {
-                    sendJson(ex, 400, makeResp(400, "缺少 member_id", null));
+                //從query parameters 取得member_id
+                String query = ex.getRequestURI().getQuery();
+                if(query ==null || !query.contains("member_id=")){
+                    sendJson(ex,400, makeResp(400, "缺少member_id參數", null));
                     break;
                 }
-                List<cart> carts = cDao.getCartByMemberId(memberIdNum.intValue());
+                String[] params = query.split("&");
+                int memberId = -1;
+                for(String param : params){
+                    if(param.startsWith("member_id=")){
+                        memberId = Integer.parseInt(param.split("=")[1]);
+                    }
+                }
+                List<cart> carts = cartDAO.getCartByMemberId(memberId);
                 sendJson(ex, 200, makeResp(200, "查詢成功", carts));
-                break;
+
             }
             case "PUT": {
                 // 修改購物車數量
@@ -361,7 +369,7 @@ public class userController implements HttpHandler {
                     break;
                 }
                 
-                boolean success = cDao.removeFromCart(memberIdNum.intValue(), productIdNum.intValue());
+                boolean success = cartDAO.removeFromCart(memberIdNum.intValue(), productIdNum.intValue());
                 sendJson(ex, success ? 200 : 400, makeResp(success ? 200 : 400, success ? "移除成功" : "移除失敗", null));
                 break;
             }
