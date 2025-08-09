@@ -323,35 +323,24 @@ public class userController implements HttpHandler {
         switch (method) {
             case "GET": {
                 // 查詢購物車
+                //從query parameters 取得member_id
                 String query = ex.getRequestURI().getQuery();
-                if(query == null || !query.contains("member_id=")) {
-                    sendJson(ex, 400, makeResp(400, "缺少member_id參數", null));
+                if(query ==null || !query.contains("member_id=")){
+                    sendJson(ex,400, makeResp(400, "缺少member_id參數", null));
                     break;
                 }
-
                 String[] params = query.split("&");
                 int memberId = -1;
-                for(String param : params) {
-                    if(param.startsWith("member_id=")) {
-                        try {
-                            memberId = Integer.parseInt(param.split("=")[1]);
-                            break;
-                        } catch (NumberFormatException e) {
-                            sendJson(ex, 400, makeResp(400, "member_id格式錯誤", null));
-                            return;
-                        }
+                for(String param : params){
+                    if(param.startsWith("member_id=")){
+                        memberId = Integer.parseInt(param.split("=")[1]);
                     }
                 }
-
-                if (memberId == -1) {
-                    sendJson(ex, 400, makeResp(400, "無效的member_id", null));
-                    break;
-                }
-
                 List<cart> carts = cartDAO.getCartByMemberId(memberId);
                 sendJson(ex, 200, makeResp(200, "查詢成功", carts));
                 break;
             }
+
             case "PUT": {
                 // 修改購物車數量
                 cart req = fromJson(ex, cart.class);
