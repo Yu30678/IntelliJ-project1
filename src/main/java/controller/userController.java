@@ -338,7 +338,7 @@ public class userController implements HttpHandler {
                 }
                 List<cart> carts = cartDAO.getCartByMemberId(memberId);
                 sendJson(ex, 200, makeResp(200, "查詢成功", carts));
-
+                break;
             }
             case "PUT": {
                 // 修改購物車數量
