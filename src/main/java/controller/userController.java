@@ -323,22 +323,14 @@ public class userController implements HttpHandler {
         switch (method) {
             case "GET": {
                 // 查詢購物車
-                //從query parameters 取得member_id
-                String query = ex.getRequestURI().getQuery();
-                if(query ==null || !query.contains("member_id=")){
-                    sendJson(ex,400, makeResp(400, "缺少member_id參數", null));
-                    break;
-                }
-                String[] params = query.split("&");
-                int memberId = -1;
-                for(String param : params){
-                    if(param.startsWith("member_id=")){
-                        memberId = Integer.parseInt(param.split("=")[1]);
-                    }
-                }
-                List<cart> carts = cartDAO.getCartByMemberId(memberId);
-                sendJson(ex, 200, makeResp(200, "查詢成功", carts));
-                break;
+               try{
+                   List <cart> allcart = cartDAO.getallcart();
+                   sendJson(ex, 200, makeResp(200, "查詢成功", allcart));
+               }catch(Exception e){
+                   e.printStackTrace();
+                   sendJson(ex, 400, makeResp(400, "查詢失敗", null));
+               }
+               break;
             }
 
             case "PUT": {

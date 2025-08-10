@@ -108,4 +108,23 @@ public class cartDAO {
             }
         }
     }
+    public List<cart> getallcart() throws Exception {
+        List<cart> list = new ArrayList<>();
+        String sql = "SELECT * FROM cart";
+        try ( Connection conn = DBUtil.getConnection();
+              PreparedStatement ps = conn.prepareStatement(sql) ) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                cart c = new cart();
+                c.setMember_id(rs.getInt("member_id"));
+                c.setProduct_id(rs.getInt("product_id"));
+                c.setQuantity(rs.getInt("quantity"));
+                c.setCreate_at(rs.getTimestamp("create_at").toLocalDateTime());
+                list.add(c);
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }
