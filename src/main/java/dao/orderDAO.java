@@ -16,12 +16,12 @@ public class orderDAO {
     /**
      * 將購物車所有商品一次性下訂單並處理庫存與購物車清除，整個流程在單一交易中完成
      */
-    public static int placeOrderFromCart(int memberId) throws Exception {
+    public int placeOrderFromCart(int memberId) throws Exception {
         String sqlInsertOrder = "INSERT INTO `order` (member_id, create_at) VALUES (?, ?)";
-        String sqlSelectCart  = "SELECT c.product_id, c.quantity, p.price, p.soh, p.is_active FROM cart c JOIN product p ON c.product_id = p.product_id WHERE c.member_id = ?";
-        String sqlInsertDetail= "INSERT INTO order_detail (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)";
+        String sqlSelectCart = "SELECT c.product_id, c.quantity, p.price, p.soh, p.is_active FROM cart c JOIN product p ON c.product_id = p.product_id WHERE c.member_id = ?";
+        String sqlInsertDetail = "INSERT INTO order_detail (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)";
         String sqlUpdateStock = "UPDATE product SET soh = soh - ? WHERE product_id = ?";
-        String sqlDeleteCart  = "DELETE FROM cart WHERE member_id = ? AND product_id = ?";
+        String sqlDeleteCart = "DELETE FROM cart WHERE member_id = ? AND product_id = ?";
 
         Connection conn = DBUtil.getConnection();
         try {
@@ -40,8 +40,8 @@ public class orderDAO {
             try (
                     PreparedStatement psSelect = conn.prepareStatement(sqlSelectCart);
                     PreparedStatement psDetail = conn.prepareStatement(sqlInsertDetail);
-                    PreparedStatement psStock  = conn.prepareStatement(sqlUpdateStock);
-                    PreparedStatement psCart   = conn.prepareStatement(sqlDeleteCart)
+                    PreparedStatement psStock = conn.prepareStatement(sqlUpdateStock);
+                    PreparedStatement psCart = conn.prepareStatement(sqlDeleteCart)
             ) {
                 psSelect.setInt(1, memberId);
                 try (ResultSet rs = psSelect.executeQuery()) {
@@ -79,7 +79,7 @@ public class orderDAO {
         }
     }
 
-    public static List<order> getOrdersByMemberId(int memberId) throws Exception {
+    public List<order> getOrdersByMemberId(int memberId) throws Exception {
         String sql = "SELECT order_id, member_id, create_at FROM `order` WHERE member_id = ? ORDER BY create_at DESC";
         List<order> list = new ArrayList<>();
         try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -97,7 +97,7 @@ public class orderDAO {
         return list;
     }
 
-    public static List<order_detail> getOrderDetailsByOrderId(int orderId) throws Exception {
+    public List<order_detail> getOrderDetailsByOrderId(int orderId) throws Exception {
         String sql = "SELECT product_id, quantity, price FROM order_detail WHERE order_id = ?";
         List<order_detail> list = new ArrayList<>();
         try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -116,22 +116,7 @@ public class orderDAO {
         return list;
     }
 
-    public static boolean validateCartBeforeOrder(int memberId) throws Exception {
-        String sql = "SELECT c.quantity, p.soh, p.is_active FROM cart c JOIN product p ON c.product_id = p.product_id WHERE c.member_id = ?";
-        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, memberId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    int qty = rs.getInt("quantity");
-                    if (!rs.getBoolean("is_active") || rs.getInt("soh") == 0 || qty > rs.getInt("soh")) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-    public static List<order> getAllOrders() throws Exception {
+    public List<order> getAllOrders() throws Exception {
         String sql = "SELECT order_id, member_id, create_at FROM `order` ORDER BY create_at DESC";
         List<order> list = new ArrayList<>();
         try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
@@ -145,23 +130,8 @@ public class orderDAO {
         }
         return list;
     }
-    public static int createOrder(int memberId) throws Exception {
-        String sql = "INSERT INTO `order` (member_id, create_at) VALUES (?, ?)";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1, memberId);
-            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
-            ps.executeUpdate();
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                } else {
-                    throw new SQLException("Creating order failed, no ID obtained.");
-                }
-            }
-        }
-    }
-    public static void updateOrder(order o) throws Exception {
+
+    public void updateOrder(order o) throws Exception {
         String sqlUpdateOrder = "UPDATE `order` SET member_id = ?, create_at = ? WHERE order_id = ?";
         String sqlDeleteDetails = "DELETE FROM order_detail WHERE order_id = ?";
         String sqlInsertDetail = "INSERT INTO order_detail (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)";
@@ -176,7 +146,7 @@ public class orderDAO {
                     ps.setInt(3, o.getOrder_id());
                     ps.executeUpdate();
                 }
-                
+
                 // 2. 如果有訂單明細，先刪除舊的再新增新的
                 if (o.getOrderDetails() != null && !o.getOrderDetails().isEmpty()) {
                     // 刪除舊的明細
@@ -184,12 +154,12 @@ public class orderDAO {
                         ps.setInt(1, o.getOrder_id());
                         ps.executeUpdate();
                     }
-                    
+
                     // 新增新的明細，價格從商品表取得當前價格
                     String sqlGetPrice = "SELECT price FROM product WHERE product_id = ?";
                     try (PreparedStatement psDetail = conn.prepareStatement(sqlInsertDetail);
                          PreparedStatement psPrice = conn.prepareStatement(sqlGetPrice)) {
-                        
+
                         for (order_detail detail : o.getOrderDetails()) {
                             // 從商品表取得當前價格
                             psPrice.setInt(1, detail.getProduct_id());
@@ -201,11 +171,11 @@ public class orderDAO {
                                     throw new SQLException("Product not found: " + detail.getProduct_id());
                                 }
                             }
-                            
+
                             // 設定 detail 物件的 order_id 和 price，這樣回傳時會有正確的值
                             detail.setOrder_id(o.getOrder_id());
                             detail.setPrice(currentPrice);
-                            
+
                             psDetail.setInt(1, o.getOrder_id());
                             psDetail.setInt(2, detail.getProduct_id());
                             psDetail.setInt(3, detail.getQuantity());
@@ -215,7 +185,7 @@ public class orderDAO {
                         psDetail.executeBatch();
                     }
                 }
-                
+
                 conn.commit();
             } catch (Exception e) {
                 conn.rollback();
@@ -225,10 +195,11 @@ public class orderDAO {
             }
         }
     }
-    public static void deleteOrder(int orderId) throws Exception {
+
+    public void deleteOrder(int orderId) throws Exception {
         String sqlDeleteDetails = "DELETE FROM order_detail WHERE order_id = ?";
         String sqlDeleteOrder = "DELETE FROM `order` WHERE order_id = ?";
-        
+
         try (Connection conn = DBUtil.getConnection()) {
             conn.setAutoCommit(false);
             try {
@@ -237,13 +208,13 @@ public class orderDAO {
                     ps.setInt(1, orderId);
                     ps.executeUpdate();
                 }
-                
+
                 // 再刪除主訂單
                 try (PreparedStatement ps = conn.prepareStatement(sqlDeleteOrder)) {
                     ps.setInt(1, orderId);
                     ps.executeUpdate();
                 }
-                
+
                 conn.commit();
             } catch (Exception e) {
                 conn.rollback();
@@ -252,5 +223,39 @@ public class orderDAO {
                 conn.setAutoCommit(true);
             }
         }
+    }
+
+    public List<order> getall() throws Exception {
+        String sql = "SELECT o.order_id, o.member_id, o.create_at, " + 
+                "od.product_id, od.quantity, od.price " +
+                "FROM `order` o " +
+                "LEFT JOIN order_detail od ON o.order_id = od.order_id " +
+                "ORDER BY o.create_at DESC, od.product_id";
+        List<order> orders = new ArrayList<>();
+        order currentOrder = null;
+        int lastOrderId = -1;
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                int orderId = rs.getInt("order_id");
+                if (orderId != lastOrderId) {
+                    currentOrder = new order();
+                    currentOrder.setOrder_id(orderId);
+                    currentOrder.setMember_id(rs.getInt("member_id"));
+                    currentOrder.setCreate_at(rs.getTimestamp("create_at").toLocalDateTime());
+                    currentOrder.setOrderDetails(new ArrayList<>());
+                    orders.add(currentOrder);
+                    lastOrderId = orderId;
+                }
+                if (rs.getObject("product_id") != null) {
+                    order_detail detail = new order_detail();
+                    detail.setOrder_id(orderId);
+                    detail.setProduct_id(rs.getInt("product_id"));
+                    detail.setQuantity(rs.getInt("quantity"));
+                    detail.setPrice(rs.getBigDecimal("price"));
+                    currentOrder.getOrderDetails().add(detail);
+                }
+            }
+        }
+        return orders;
     }
 }

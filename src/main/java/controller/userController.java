@@ -211,18 +211,12 @@ public class userController implements HttpHandler {
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
         switch (method) {
             case "GET": {
-                String query = ex.getRequestURI().getQuery();
-                if (query != null && query.startsWith("order_id=")) {
-                    int orderId = Integer.parseInt(query.split("=")[1]);
-                    List<order_detail> details = oDao.getOrderDetailsByOrderId(orderId);
-                    sendJson(ex, 200, makeResp(200, "查詢訂單詳情成功", details));
-                } else if (query != null && query.startsWith("member_id=")) {
-                    int id = Integer.parseInt(query.split("=")[1]);
-                    List<order> m = oDao.getOrdersByMemberId(id);
-                    sendJson(ex, 200, makeResp(200, "查詢成功", m));
-                } else {
-                    List<order> list = oDao.getAllOrders();
-                    sendJson(ex, 200, makeResp(200, "查詢成功", list));
+                try {
+                    List<order> allOrders = oDao.getall();
+                    sendJson(ex, 200, makeResp(200, "查詢成功", allOrders));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    sendJson(ex, 500, makeResp(500, "查詢訂單時發生錯誤", null));
                 }
                 break;
             }
