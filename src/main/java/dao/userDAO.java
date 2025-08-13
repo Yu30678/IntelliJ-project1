@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class userDAO {
+    //瀏覽管理員列表(管理員)
     public List<user> getUsers()throws Exception {
         List<user> list = new ArrayList<>();
         Connection conn = DBUtil.getConnection();
@@ -31,7 +32,7 @@ public class userDAO {
 
         return list;
     }
-    // 1) 註冊
+    //管理員註冊(管理員)
     public static user insertUser(user u) throws Exception {
         String sql = "INSERT INTO user (name, password, account, level) VALUES (?, ?, ?, ?)";
         try (Connection conn = DBUtil.getConnection();
@@ -53,7 +54,7 @@ public class userDAO {
     }
 
 
-    // 2) 登入（依 account/password 搜尋）
+    //管理員登入（依 account/password 搜尋）
     public static Optional<user> findByAccountAndPassword(String account, String password) throws Exception {
         String sql = "SELECT user_id, name, account, level FROM user WHERE account = ? AND password = ?";
         try (Connection conn = DBUtil.getConnection();
@@ -77,7 +78,7 @@ public class userDAO {
         return Optional.empty();
     }
 
-    // 3) 修改
+    //修改管理員資訊
     public static boolean updateUser(user u) throws Exception {
         String sql = "UPDATE user SET name = ?, password = ?, account = ?, level = ? WHERE user_id = ?";
         try (Connection conn = DBUtil.getConnection();
@@ -92,7 +93,7 @@ public class userDAO {
         }
     }
 
-    // 4) 刪除
+    //刪除管理員
     public static boolean deleteUser(int id) throws Exception {
         String sql = "DELETE FROM user WHERE user_id = ?";
         try (Connection conn = DBUtil.getConnection();

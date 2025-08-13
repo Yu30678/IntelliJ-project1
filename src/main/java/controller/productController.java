@@ -58,7 +58,7 @@ public class productController implements HttpHandler {
             response.add("data", gson.toJsonTree(products));
         } catch (Exception e) {
             e.printStackTrace();
-            statusCode = 500;
+            statusCode = 400;
             response.addProperty("status", statusCode);
             response.addProperty("message", "商品查詢失敗：" + e.getMessage());
             response.add("data", JsonNull.INSTANCE);

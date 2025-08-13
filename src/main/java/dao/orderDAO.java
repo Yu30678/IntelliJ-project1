@@ -16,6 +16,7 @@ public class orderDAO {
     /**
      * 將購物車所有商品一次性下訂單並處理庫存與購物車清除，整個流程在單一交易中完成
      */
+    //會員下訂單(會員)
     public int placeOrderFromCart(int memberId) throws Exception {
         String sqlInsertOrder = "INSERT INTO `order` (member_id, create_at) VALUES (?, ?)";
         String sqlSelectCart = "SELECT c.product_id, c.quantity, p.price, p.soh, p.is_active FROM cart c JOIN product p ON c.product_id = p.product_id WHERE c.member_id = ?";
@@ -78,7 +79,7 @@ public class orderDAO {
             conn.close();
         }
     }
-
+    //會員查詢訂單資料(會員)
     public List<order> getOrdersByMemberId(int memberId) throws Exception {
         String sql = "SELECT order_id, member_id, create_at FROM `order` WHERE member_id = ? ORDER BY create_at DESC";
         List<order> list = new ArrayList<>();
@@ -96,7 +97,7 @@ public class orderDAO {
         }
         return list;
     }
-
+     //會員查詢訂單明細(會員)
     public List<order_detail> getOrderDetailsByOrderId(int orderId) throws Exception {
         String sql = "SELECT product_id, quantity, price FROM order_detail WHERE order_id = ?";
         List<order_detail> list = new ArrayList<>();
@@ -115,22 +116,7 @@ public class orderDAO {
         }
         return list;
     }
-
-    public List<order> getAllOrders() throws Exception {
-        String sql = "SELECT order_id, member_id, create_at FROM `order` ORDER BY create_at DESC";
-        List<order> list = new ArrayList<>();
-        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                order o = new order();
-                o.setOrder_id(rs.getInt("order_id"));
-                o.setMember_id(rs.getInt("member_id"));
-                o.setCreate_at(rs.getTimestamp("create_at").toLocalDateTime());
-                list.add(o);
-            }
-        }
-        return list;
-    }
-
+    //更新訂單(管理員)
     public void updateOrder(order o) throws Exception {
         String sqlUpdateOrder = "UPDATE `order` SET member_id = ?, create_at = ? WHERE order_id = ?";
         String sqlDeleteDetails = "DELETE FROM order_detail WHERE order_id = ?";
@@ -195,7 +181,7 @@ public class orderDAO {
             }
         }
     }
-
+    //刪除訂單(管理員)
     public void deleteOrder(int orderId) throws Exception {
         String sqlDeleteDetails = "DELETE FROM order_detail WHERE order_id = ?";
         String sqlDeleteOrder = "DELETE FROM `order` WHERE order_id = ?";
@@ -224,7 +210,7 @@ public class orderDAO {
             }
         }
     }
-
+    //讀取訂單與訂單明細(管理員)
     public List<order> getall() throws Exception {
         String sql = "SELECT o.order_id, o.member_id, o.create_at, " + 
                 "od.product_id, od.quantity, od.price " +

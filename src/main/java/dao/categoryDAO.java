@@ -6,6 +6,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 public class categoryDAO {
+    //瀏覽商品類別列表(管理員)
     public static List<Category> getAllCategories() throws Exception {
         String sql = "SELECT category_id, name FROM category";
         List<Category> list = new ArrayList<>();
@@ -19,21 +20,7 @@ public class categoryDAO {
         }
         return list;
     }
-    public static Category getCategoryById(int id) throws Exception {
-        String sql = "SELECT category_id, name FROM category WHERE category_id = ?";
-        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    Category c = new Category();
-                    c.setCategory_id(rs.getInt("category_id"));
-                    c.setName(rs.getString("name"));
-                    return c;
-                }
-            }
-        }
-        return null;
-    }
+    //新增商品類別(管理員)
     public static boolean insertCategory(Category c) throws Exception {
         String sql = "INSERT INTO category (name) VALUES (?)";
         try (Connection conn = DBUtil.getConnection();
@@ -54,6 +41,7 @@ public class categoryDAO {
             }
         }
     }
+    //更新商品類別(管理員)
     public static boolean updateCategory(Category c) throws Exception {
         String sql = "UPDATE category SET name = ? WHERE category_id = ?";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -63,6 +51,7 @@ public class categoryDAO {
             return affected > 0;
         }
     }
+    //刪除商品類別(管理員)
     public static boolean deleteCategory(int id) throws Exception {
         String sql = "DELETE FROM category WHERE category_id = ?";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {

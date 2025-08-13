@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class memberDAO {
+    //瀏覽會員列表(管理員)
     public List<Member> getAllMembers() throws Exception {
         List<Member> list = new ArrayList<>();
         Connection conn = DBUtil.getConnection();
@@ -36,6 +37,7 @@ public class memberDAO {
 
         return list;
     }
+    //新增會員(會員、管理員)
     public boolean insertMember(Member m) {
         String sql = "INSERT INTO member (name, password, phone, address, email) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -73,6 +75,7 @@ public class memberDAO {
             //throw new RuntimeException(e);
         }
     }
+    //會員登入(會員)
     public Member findByEmail(String email, String password) {
         String sql = "SELECT * FROM member WHERE email = ? AND password = ?";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -95,6 +98,7 @@ public class memberDAO {
         }
         return null;
     }
+    //取得會員資料(管理員)
     public Member getMemberById(int id) throws Exception {
         String sql = "SELECT member_id, name, phone, password, address, create_at, email FROM member WHERE member_id = ?";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -115,6 +119,7 @@ public class memberDAO {
         }
         return null;
     }
+    //更新會員資料(會員、管理員)
     public boolean updateMember(Member m) throws Exception {
         String sql = "UPDATE member SET name=?, password=?, phone=?, address=?, email=? WHERE member_id=?";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -127,6 +132,7 @@ public class memberDAO {
             return ps.executeUpdate() > 0;
         }
     }
+    //刪除會員(管理員)
     public boolean deleteMember(int id) throws Exception {
         String sql = "DELETE FROM member WHERE member_id = ?";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -134,7 +140,7 @@ public class memberDAO {
             return ps.executeUpdate() > 0;
         }
     }
-    //會員查詢自己資料方法
+    //會員查詢自己資料方法(會員)
     public Member findByid(int id) {
         String sql = "SELECT * FROM member WHERE member_id = ?";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {

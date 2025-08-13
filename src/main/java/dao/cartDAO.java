@@ -9,7 +9,7 @@ import java.util.List;
 
 public class cartDAO {
 
-    // 加入購物車：檢查庫存、是否已有該商品
+    // 加入購物車：檢查庫存、是否已有該商品(會員)
     public String addToCart(cart cartItem) {
         try (Connection conn = DBUtil.getConnection()) {
             // 1. 先檢查商品是否存在
@@ -62,7 +62,7 @@ public class cartDAO {
         }
     }
 
-    // 查看購物車
+    // 查看購物車(會員)
     public List<cart> getCartByMemberId(int memberId) {
         List<cart> list = new ArrayList<>();
         String sql = "SELECT * FROM cart WHERE member_id = ?";
@@ -83,7 +83,7 @@ public class cartDAO {
         return list;
     }
 
-    // 移除購物車商品
+    // 移除購物車商品(會員、管理員)
     public boolean removeFromCart(int memberId, int productId)  {
         String sql = "DELETE FROM cart WHERE member_id = ? AND product_id = ?";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -95,6 +95,7 @@ public class cartDAO {
             return false;
         }
     }
+    //更新購物車(會員、管理員)
     public void updateQuantity(int memberId, int productId, int quantity) throws Exception {
         String sql = "UPDATE cart SET quantity = ? WHERE member_id = ? AND product_id = ?";
         try ( Connection conn = DBUtil.getConnection();
@@ -108,6 +109,7 @@ public class cartDAO {
             }
         }
     }
+    //瀏覽購物車列表(管理員)
     public List<cart> getallcart() throws Exception {
         List<cart> list = new ArrayList<>();
         String sql = "SELECT * FROM cart";

@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class productDAO {
-
+    //瀏覽商品列表Customize Toolbar…
     public static List<product> getAllProducts() throws Exception {
         List<product> products = new ArrayList<>();
 
@@ -35,7 +35,7 @@ public class productDAO {
 
         return products;
     }
-
+    //新增商品(管理員)
     public static boolean insertProduct(product p) throws Exception {
         String sql = "INSERT INTO product (name, price, soh, category_id, is_active, image_url) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBUtil.getConnection();
@@ -59,7 +59,7 @@ public class productDAO {
         }
         return false;
     }
-
+    //更新商品資訊(管理員)
     public static boolean updateProduct(product p) throws Exception {
         String sql = "UPDATE product SET name = ?, price = ?, soh = ?, category_id = ?, is_active = ? , image_url = ? WHERE product_id = ?";
         try (Connection conn = DBUtil.getConnection();
@@ -75,7 +75,7 @@ public class productDAO {
             return affected > 0;
         }
     }
-
+    //刪除產品(管理員)
     public static boolean deleteProduct(int product_id) throws Exception {
         String sql = "DELETE FROM product WHERE product_id = ?";
         try (Connection conn = DBUtil.getConnection();
@@ -85,12 +85,14 @@ public class productDAO {
             return affected > 0;
         }
     }
+    //自動將庫存為 0 的商品設為不可用狀態
     public static void deactivateOutOfStockProducts() throws Exception {
         String sql = "UPDATE product SET is_active = 0 WHERE soh = 0 AND is_active = 1";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.executeUpdate();
         }
     }
+    //讀取商品資訊(會員)
     public static product getProductById(int product_id) throws Exception {
         String sql = "SELECT * FROM product WHERE product_id = ?";
         try (Connection c = DBUtil.getConnection();
@@ -107,16 +109,6 @@ public class productDAO {
                 p.setIs_active(rs.getBoolean("is_active"));
                 return p;
             }
-        }
-    }
-
-    public static void updateSoh(int product_id, int newSoh) throws Exception {
-        String sql = "UPDATE product SET soh = ? WHERE product_id = ?";
-        try (Connection c = DBUtil.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, newSoh);
-            ps.setInt(2, product_id);
-            ps.executeUpdate();
         }
     }
 }
