@@ -139,27 +139,13 @@ public class orderController implements HttpHandler {
         try {
             if (q != null && q.startsWith("member_id=")) {
                 int memberId = Integer.parseInt(q.split("=")[1]);
-                List<order> orderList = orderDAO.getOrdersByMemberId(memberId);
+                List<order> orderList = orderDAO.getOrdersWithDetailsByMemberId(memberId);
 
-                // 為每個訂單取得詳細資料
                 JsonObject response = new JsonObject();
                 response.addProperty("status", 200);
                 response.addProperty("message", "查詢成功");
-
-                JsonObject data = new JsonObject();
-                data.add("orders", gson.toJsonTree(orderList));
-
-                // 如果有訂單，也取得所有訂單的詳細資料
-                if (!orderList.isEmpty()) {
-                    JsonObject allDetails = new JsonObject();
-                    for (order o : orderList) {
-                        List<order_detail> details = orderDAO.getOrderDetailsByOrderId(o.getOrder_id());
-                        allDetails.add("order_" + o.getOrder_id(), gson.toJsonTree(details));
-                    }
-                    data.add("order_details", allDetails);
-                }
-
-                response.add("data", data);
+                response.add("data", gson.toJsonTree(orderList));
+                
                 sendJson(ex, 200, gson.toJson(response));
             } else {
                 sendJson(ex, 400, "{\"error\":\"member_id parameter required\"}");
@@ -214,4 +200,5 @@ public class orderController implements HttpHandler {
             os.write(bytes);
         }
     }
+
 }

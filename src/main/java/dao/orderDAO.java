@@ -79,7 +79,46 @@ public class orderDAO {
             conn.close();
         }
     }
-    //會員查詢訂單資料(會員)
+    //會員查詢訂單資料含明細(會員)
+    public List<order> getOrdersWithDetailsByMemberId(int memberId) throws Exception {
+        String sql = "SELECT o.order_id, o.member_id, o.create_at, " + 
+                "od.product_id, od.quantity, od.price " +
+                "FROM `order` o " +
+                "LEFT JOIN order_detail od ON o.order_id = od.order_id " +
+                "WHERE o.member_id = ? " +
+                "ORDER BY o.create_at DESC, od.product_id";
+        List<order> orders = new ArrayList<>();
+        order currentOrder = null;
+        int lastOrderId = -1;
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, memberId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int orderId = rs.getInt("order_id");
+                    if (orderId != lastOrderId) {
+                        currentOrder = new order();
+                        currentOrder.setOrder_id(orderId);
+                        currentOrder.setMember_id(rs.getInt("member_id"));
+                        currentOrder.setCreate_at(rs.getTimestamp("create_at").toLocalDateTime());
+                        currentOrder.setOrderDetails(new ArrayList<>());
+                        orders.add(currentOrder);
+                        lastOrderId = orderId;
+                    }
+                    if (rs.getObject("product_id") != null) {
+                        order_detail detail = new order_detail();
+                        detail.setOrder_id(orderId);
+                        detail.setProduct_id(rs.getInt("product_id"));
+                        detail.setQuantity(rs.getInt("quantity"));
+                        detail.setPrice(rs.getBigDecimal("price"));
+                        currentOrder.getOrderDetails().add(detail);
+                    }
+                }
+            }
+        }
+        return orders;
+    }
+
+    //會員查詢訂單資料(會員) - 保留原方法以向後兼容
     public List<order> getOrdersByMemberId(int memberId) throws Exception {
         String sql = "SELECT order_id, member_id, create_at FROM `order` WHERE member_id = ? ORDER BY create_at DESC";
         List<order> list = new ArrayList<>();
@@ -244,4 +283,5 @@ public class orderDAO {
         }
         return orders;
     }
+
 }
