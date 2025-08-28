@@ -20,7 +20,7 @@ public class Main {
         }
 
         HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
-        FileController fileController = new FileController();
+        //FileController fileController = new FileController();
 
         server.createContext("/member" , new CORSWrapperHandler(new memberController()));
         server.createContext("/product", new CORSWrapperHandler(new productController()));
@@ -28,7 +28,7 @@ public class Main {
         server.createContext("/order", new CORSWrapperHandler(new orderController()));
         server.createContext("/order_detail", new CORSWrapperHandler(new orderController()));
         server.createContext("/user", new CORSWrapperHandler(new userController()));
-        server.createContext("/api/upload", fileController::handleFileUpload);
+        //server.createContext("/api/upload", fileController::handleFileUpload);
         // 使用絕對路徑指向 images 目錄
         String imagesPath = System.getProperty("user.dir") + "/src/main/resources/images";
         System.out.println("🖼️ 圖片服務路徑: " + imagesPath);
