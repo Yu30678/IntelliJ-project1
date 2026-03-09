@@ -59,7 +59,6 @@ public class memberController implements HttpHandler {
             data.addProperty("phone",   newMember.getPhone());
             data.addProperty("address",     newMember.getAddress());
             data.addProperty("email", newMember.getEmail());
-            // （如果你有其他欄位也要加在這裡）
 
             // 組最外層
             wrapper.addProperty("status",  200);
@@ -91,7 +90,7 @@ public class memberController implements HttpHandler {
 
     private void handleLogin(HttpExchange exchange) throws IOException {
 
-        int statusCode = 500;
+        int statusCode ;
         String responseJson;
         try (InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8)) {
             Member loginRequest = gson.fromJson(reader, Member.class);

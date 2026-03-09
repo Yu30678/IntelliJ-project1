@@ -65,7 +65,6 @@ public class userDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    // 一定要有一個 public user() {} 的無參建構子
                     user u = new user();
                     u.setName(rs.getString("name"));
                     u.setAccount(rs.getString("account"));

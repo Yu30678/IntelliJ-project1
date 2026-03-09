@@ -26,7 +26,7 @@ public class orderDAO {
 
         Connection conn = DBUtil.getConnection();
         try {
-            conn.setAutoCommit(false);
+            conn.setAutoCommit(false);//關閉自動提交
             int orderId;
             try (PreparedStatement ps = conn.prepareStatement(sqlInsertOrder, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setInt(1, memberId);
@@ -88,8 +88,8 @@ public class orderDAO {
                 "WHERE o.member_id = ? " +
                 "ORDER BY o.create_at DESC, od.product_id";
         List<order> orders = new ArrayList<>();
-        order currentOrder = null;
-        int lastOrderId = -1;
+        order currentOrder = null;//暫定目前訂單避免重複建立
+        int lastOrderId = -1;//追蹤是否進入新訂單，-1確保第一次比較不同
         try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, memberId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -100,17 +100,17 @@ public class orderDAO {
                         currentOrder.setOrder_id(orderId);
                         currentOrder.setMember_id(rs.getInt("member_id"));
                         currentOrder.setCreate_at(rs.getTimestamp("create_at").toLocalDateTime());
-                        currentOrder.setOrderDetails(new ArrayList<>());
-                        orders.add(currentOrder);
-                        lastOrderId = orderId;
+                        currentOrder.setOrderDetails(new ArrayList<>());//初始化明細清單
+                        orders.add(currentOrder);//回傳訂單
+                        lastOrderId = orderId;//更新追蹤變數
                     }
-                    if (rs.getObject("product_id") != null) {
+                    if (rs.getObject("product_id") != null) { //檢查使否有商品明細
                         order_detail detail = new order_detail();
                         detail.setOrder_id(orderId);
                         detail.setProduct_id(rs.getInt("product_id"));
                         detail.setQuantity(rs.getInt("quantity"));
                         detail.setPrice(rs.getBigDecimal("price"));
-                        currentOrder.getOrderDetails().add(detail);
+                        currentOrder.getOrderDetails().add(detail);//加入當前訂單明細
                     }
                 }
             }
@@ -166,14 +166,15 @@ public class orderDAO {
             try {
                 // 1. 更新主訂單
                 try (PreparedStatement ps = conn.prepareStatement(sqlUpdateOrder)) {
-                    ps.setInt(1, o.getMember_id());
+                    ps.setInt(1, o.getMember_id()); //前端帶入當前member_id
                     ps.setTimestamp(2, Timestamp.valueOf(o.getCreate_at()));
                     ps.setInt(3, o.getOrder_id());
                     ps.executeUpdate();
                 }
 
                 // 2. 如果有訂單明細，先刪除舊的再新增新的
-                if (o.getOrderDetails() != null && !o.getOrderDetails().isEmpty()) {
+                if (o.getOrderDetails() != null && !o.getOrderDetails().isEmpty())//確保有訂單明細資料
+                {
                     // 刪除舊的明細
                     try (PreparedStatement ps = conn.prepareStatement(sqlDeleteDetails)) {
                         ps.setInt(1, o.getOrder_id());
@@ -261,23 +262,24 @@ public class orderDAO {
         int lastOrderId = -1;
         try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                int orderId = rs.getInt("order_id");
-                if (orderId != lastOrderId) {
+                int orderId = rs.getInt("order_id");//逐筆紀錄
+                if (orderId != lastOrderId) {//判斷是否為不同訂單
                     currentOrder = new order();
                     currentOrder.setOrder_id(orderId);
                     currentOrder.setMember_id(rs.getInt("member_id"));
                     currentOrder.setCreate_at(rs.getTimestamp("create_at").toLocalDateTime());
-                    currentOrder.setOrderDetails(new ArrayList<>());
-                    orders.add(currentOrder);
-                    lastOrderId = orderId;
+                    currentOrder.setOrderDetails(new ArrayList<>());//初始化明細清單
+                    orders.add(currentOrder);//回傳訂單
+                    lastOrderId = orderId;//更新追蹤變數
                 }
-                if (rs.getObject("product_id") != null) {
+                if (rs.getObject("product_id") != null)//檢查是否有訂單明細，如null會回傳null而不是０
+                {
                     order_detail detail = new order_detail();
                     detail.setOrder_id(orderId);
                     detail.setProduct_id(rs.getInt("product_id"));
                     detail.setQuantity(rs.getInt("quantity"));
                     detail.setPrice(rs.getBigDecimal("price"));
-                    currentOrder.getOrderDetails().add(detail);
+                    currentOrder.getOrderDetails().add(detail);//加入目前訂單的明細清單
                 }
             }
         }

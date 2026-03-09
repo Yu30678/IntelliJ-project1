@@ -28,7 +28,7 @@ public class orderController implements HttpHandler {
     private final productDAO productDAO = new productDAO();
     private final orderDAO orderDAO = new orderDAO();
     public orderController() {
-        System.out.println("✅ orderController created and registered");
+        System.out.println("orderController created and registered");
     }
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
@@ -36,7 +36,7 @@ public class orderController implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        System.out.println("📦 收到請求: " + exchange.getRequestMethod() + " " + exchange.getRequestURI().getPath());
+        System.out.println("收到請求: " + exchange.getRequestMethod() + " " + exchange.getRequestURI().getPath());
         String method = exchange.getRequestMethod();
         String path = exchange.getRequestURI().getPath();
         String query  = exchange.getRequestURI().getRawQuery();

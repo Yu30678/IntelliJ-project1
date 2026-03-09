@@ -9,10 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class productDAO {
-    //瀏覽商品列表Customize Toolbar…
+    //瀏覽商品列表
     public static List<product> getAllProducts() throws Exception {
         List<product> products = new ArrayList<>();
-
         try (Connection conn = DBUtil.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(

@@ -7,28 +7,32 @@ import com.google.gson.JsonNull;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.UUID;
+import util.GoogleDriveService;
 
 /**
  * 文件上傳控制器 - 專門用於商品圖片上傳
  * 支援 form-data 和 binary 兩種上傳方式
- * 儲存路徑：src/main/resources/images
+ * 儲存至：Google Drive
  */
 public class FileController {
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    
-    // 圖片儲存路徑 - 使用絕對路徑指向專案的 resources/images 目錄
-    private static final String IMAGE_STORAGE_PATH = System.getProperty("user.dir") + "/src/main/resources/images";
+    private final GoogleDriveService driveService;
     
     // 支援的圖片格式
     private static final String[] ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif"};
     
     // 最大檔案大小 (5MB)
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
+    
+    public FileController() {
+        try {
+            this.driveService = new GoogleDriveService();
+            System.out.println("✅ Google Drive 服務初始化成功");
+        } catch (Exception e) {
+            throw new RuntimeException("Google Drive 服務初始化失敗: " + e.getMessage(), e);
+        }
+    }
 
     /**
      * 處理檔案上傳請求
@@ -44,16 +48,13 @@ public class FileController {
                 response.addProperty("message", "只允許 POST 請求");
                 response.add("data", JsonNull.INSTANCE);
             } else {
-                // 確保儲存目錄存在
-                ensureImageDirectoryExists();
-                
-                String fileName;
+                GoogleDriveService.DriveUploadResult uploadResult;
                 String contentType = exchange.getRequestHeaders().getFirst("Content-Type");
 
                 if (contentType != null && contentType.startsWith("multipart/form-data")) {
-                    fileName = handleFormDataUpload(exchange);
+                    uploadResult = handleFormDataUpload(exchange);
                 } else {
-                    fileName = handleBinaryUpload(exchange);
+                    uploadResult = handleBinaryUpload(exchange);
                 }
 
                 statusCode = 200;
@@ -61,9 +62,12 @@ public class FileController {
                 response.addProperty("message", "商品圖片上傳成功");
 
                 JsonObject fileData = new JsonObject();
-                fileData.addProperty("fileName", fileName);
-                fileData.addProperty("filePath", "/images/" + fileName);
-                fileData.addProperty("fullUrl", "http://localhost:8080/images/" + fileName);
+                fileData.addProperty("fileName", uploadResult.getFileName());
+                fileData.addProperty("fileId", uploadResult.getFileId());
+                fileData.addProperty("directUrl", uploadResult.getDirectAccessUrl());
+                fileData.addProperty("thumbnailUrl", uploadResult.getThumbnailUrl());
+                fileData.addProperty("downloadUrl", uploadResult.getDownloadUrl());
+                fileData.addProperty("webViewLink", uploadResult.getWebViewLink());
                 response.add("data", fileData);
             }
         } catch (Exception e) {
@@ -80,7 +84,7 @@ public class FileController {
     /**
      * 處理 binary 格式上傳
      */
-    private String handleBinaryUpload(HttpExchange exchange) throws IOException {
+    private GoogleDriveService.DriveUploadResult handleBinaryUpload(HttpExchange exchange) throws IOException {
         // 檢查內容長度
         String contentLengthStr = exchange.getRequestHeaders().getFirst("Content-Length");
         if (contentLengthStr != null) {
@@ -111,13 +115,13 @@ public class FileController {
             throw new IOException("檔案內容為空");
         }
 
-        return saveImageFile(fileContent);
+        return uploadImageToDrive(fileContent);
     }
 
     /**
      * 處理 form-data 格式上傳
      */
-    private String handleFormDataUpload(HttpExchange exchange) throws IOException {
+    private GoogleDriveService.DriveUploadResult handleFormDataUpload(HttpExchange exchange) throws IOException {
         String contentType = exchange.getRequestHeaders().getFirst("Content-Type");
         String boundary = extractBoundary(contentType);
         
@@ -148,7 +152,7 @@ public class FileController {
     /**
      * 解析 multipart 數據
      */
-    private String parseMultipartData(byte[] requestBody, String boundary) throws IOException {
+    private GoogleDriveService.DriveUploadResult parseMultipartData(byte[] requestBody, String boundary) throws IOException {
         String bodyStr = new String(requestBody, "ISO-8859-1");
         String boundaryStr = "--" + boundary;
         String[] parts = bodyStr.split(boundaryStr);
@@ -168,7 +172,7 @@ public class FileController {
                     if (contentStart < contentEnd) {
                         String fileContentStr = part.substring(contentStart, contentEnd);
                         byte[] fileContent = fileContentStr.getBytes("ISO-8859-1");
-                        return saveImageFile(fileContent);
+                        return uploadImageToDrive(fileContent);
                     }
                 }
             }
@@ -178,9 +182,9 @@ public class FileController {
     }
 
     /**
-     * 儲存圖片檔案
+     * 上傳圖片到 Google Drive
      */
-    private String saveImageFile(byte[] content) throws IOException {
+    private GoogleDriveService.DriveUploadResult uploadImageToDrive(byte[] content) throws IOException {
         // 根據檔案內容判斷格式
         String extension = detectImageFormat(content);
         if (extension == null) {
@@ -188,14 +192,31 @@ public class FileController {
         }
 
         // 生成唯一檔名
-        String fileName = "product_" + UUID.randomUUID().toString() + extension;
-        Path targetPath = Paths.get(IMAGE_STORAGE_PATH, fileName);
-
-        // 儲存檔案
-        Files.write(targetPath, content);
+        String fileName = GoogleDriveService.generateUniqueFileName(extension);
         
-        System.out.println("✅ 商品圖片上傳成功: " + fileName + " (大小: " + content.length + " bytes)");
-        return fileName;
+        // 決定 MIME 類型
+        String mimeType = getMimeTypeFromExtension(extension);
+
+        // 上傳到 Google Drive
+        GoogleDriveService.DriveUploadResult result = driveService.uploadImage(content, fileName, mimeType);
+        
+        System.out.println("✅ 商品圖片上傳到 Google Drive 成功: " + fileName + " (大小: " + content.length + " bytes)");
+        System.out.println("📂 Google Drive ID: " + result.getFileId());
+        System.out.println("🔗 直接存取 URL: " + result.getDirectAccessUrl());
+        
+        return result;
+    }
+
+    /**
+     * 根據副檔名取得 MIME 類型
+     */
+    private String getMimeTypeFromExtension(String extension) {
+        return switch (extension.toLowerCase()) {
+            case ".jpg", ".jpeg" -> "image/jpeg";
+            case ".png" -> "image/png";
+            case ".gif" -> "image/gif";
+            default -> "application/octet-stream";
+        };
     }
 
     /**
@@ -243,20 +264,6 @@ public class FileController {
         return null;
     }
 
-    /**
-     * 確保圖片儲存目錄存在
-     */
-    private void ensureImageDirectoryExists() throws IOException {
-        Path imageDir = Paths.get(IMAGE_STORAGE_PATH);
-        System.out.println("🔍 檢查圖片目錄: " + imageDir.toAbsolutePath());
-        
-        if (!Files.exists(imageDir)) {
-            Files.createDirectories(imageDir);
-            System.out.println("📁 創建圖片儲存目錄: " + imageDir.toAbsolutePath());
-        } else {
-            System.out.println("✅ 圖片目錄已存在: " + imageDir.toAbsolutePath());
-        }
-    }
 
     /**
      * 發送 JSON 回應
