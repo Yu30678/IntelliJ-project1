@@ -23,9 +23,9 @@ public class CORSWrapperHandler implements HttpHandler {
         Headers headers = exchange.getResponseHeaders();
         headers.add("Access-Control-Allow-Origin", allowOrigin);
         headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With,Accept");
+        headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept, X-Object-Key");
         headers.add("Access-Control-Max-Age", "3600");
-        headers.add("Access-Control-Allow-Credentials", "true");
+        //headers.add("Access-Control-Allow-Credentials", "true");
 
 
         if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {

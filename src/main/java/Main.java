@@ -30,6 +30,12 @@ public class Main {
         server.createContext("/user", new CORSWrapperHandler(new userController()));
         //server.createContext("/api/upload", fileController::handleFileUpload);
         // 使用絕對路徑指向 images 目錄
+        // S3 服務
+        server.createContext("/s3/list",     S3Controller.list());
+        server.createContext("/s3/upload",   S3Controller.upload());
+        server.createContext("/s3/download", S3Controller.download());
+        server.createContext("/s3/delete",   S3Controller.delete());
+
         String imagesPath = System.getProperty("user.dir") + "/src/main/resources/images";
         System.out.println("🖼️ 圖片服務路徑: " + imagesPath);
         server.createContext("/images", new CORSWrapperHandler(
